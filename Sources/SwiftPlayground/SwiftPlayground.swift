@@ -19,8 +19,8 @@ struct SwiftPlayground {
             let sightingsFilter = sightings.filter{ sighting in return sighting.name.hasPrefix("m")  
             || sighting.name.hasPrefix("w")}
             print(sightingsFilter)
-            let filterdScores = sightingsFilter.map({ ($0  in return score ) })
-
-
+            let filterdScores = sightingsFilter.map{$0.score}.reduce(0){score in return $0 + $1}
+            print(filterdScores)
+            
     }
 }
