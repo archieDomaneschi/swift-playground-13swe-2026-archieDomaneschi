@@ -19,8 +19,29 @@ struct SwiftPlayground {
             let sightingsFilter = sightings.filter{ sighting in return sighting.name.hasPrefix("m")  
             || sighting.name.hasPrefix("w")}
             print(sightingsFilter)
-            let filterdScores = sightingsFilter.map{$0.score}.reduce(0){score in return $0 + $1}
+            let filterdScores = sightingsFilter.map{$0.score}
             print(filterdScores)
+            let totalScores = filterdScores.reduce(0){ $0 + $1}
+            print(totalScores)
+            let lowestScore = filterdScores.min()
+            let highestScore = filterdScores.max()
+            print(highestScore ?? "")
+            print(lowestScore ?? "")
+
+            func isValid(input:String) -> Bool{
+                if input == input.lowercased() || input.count >= 8{
+                    return true}
+                else{
+                    return false}
+                }
+
+
+            }
+        func accepts(_ input: String, isValid: (String) -> Bool) -> Bool {
+            return isValid(input)
+            
+}
+
             
     }
-}
+
