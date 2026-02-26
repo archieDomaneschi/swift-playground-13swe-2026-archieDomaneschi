@@ -15,11 +15,19 @@ struct Course: CustomStringConvertible{
     }
 
 }
-
-
 struct Enrolment: Codable{
     let studentID: Int
     let CourseID: Int
+}
+
+
+struct EnrolmentHashable: Hashable{
+    let studentID: Int
+    let CourseID: Int
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(studentID)
+        hasher.combine(CourseID)
+    }
 }
 
 struct ScoreEntry: Comparable {
@@ -38,6 +46,15 @@ struct SwiftPlayground {
         print(data)
         let decodedEnrolment = try! JSONDecoder().decode(Enrolment.self, from: data)
         print(decodedEnrolment)
+        var scoreEntries = [ScoreEntry(studentID: UUID(), points: 85.0),
+                            ScoreEntry(studentID: UUID(), points: 92.5),
+                            ScoreEntry(studentID: UUID(), points: 78.0)]
+        scoreEntries.sort()
+        for entry in scoreEntries{
+            print(entry.points)
+        
+        }
 
+        }
     }
-}
+
