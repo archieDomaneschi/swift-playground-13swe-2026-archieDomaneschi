@@ -1,5 +1,6 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
+// tung tung tung sam hur
 
 // book struct holds author title and length of book plus a ethod to print a book summary
 struct Book {
@@ -36,15 +37,18 @@ struct Timer {
 
     mutating func start() {
         isRunning = true
+        print("is running:", isRunning)
     }
     mutating func tick() {
         if isRunning == true {
             seconds += 1
+        print("seconds:", seconds)
         }
     }
     mutating func reset() {
         seconds = 0
         isRunning = false
+        print("seconds:", seconds, "is running:", isRunning)
     }
 }
 // cart struct contains 2 properties and 3 methods to add an item to the cart, check if the cart qualifies for free shipping and to print a message about free shipping
@@ -63,7 +67,7 @@ struct Cart {
         }
     }
     func shippingMessage() -> String {
-        if itemsCount >= Cart.freeShippingThreshold {
+        if Cart.qualifiesForFreeShipping(count: itemsCount) == true {
             return "you are eligable for free shipping"
         } else {
             return
@@ -72,6 +76,7 @@ struct Cart {
 
     }
 }
+
 // stuct badge contains 2 properties and a computed property to print the name and level of the badge in a specific format
 struct Badge {
     var name: String
@@ -100,11 +105,8 @@ struct SwiftPlayground {
         // timer task, creates an instance of the timer struct and calls the start, tick and reset functions to show how the seconds property changes with each function call
         var timer = Timer(seconds: 0, isRunning: false)
         timer.start()
-        print(timer.seconds)
         timer.tick()
-        print(timer.seconds)
         timer.reset()
-        print(timer.seconds)
         // cart task, creates an instance of the cart struct and uses a while loop to add items to the cart and print out the shipping message after each item is added to show how the message changes as the items count increases
         var amountofcycles = 0
         var cart1 = Cart(itemsCount: 0)
