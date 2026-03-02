@@ -13,39 +13,35 @@ struct Course: CustomStringConvertible{
     var description: String{
         return "Course: \(title) with id: \(id)"
     }
-
 }
-struct Enrolment: Codable{
-    let studentID: Int
-    let CourseID: Int
-}
-
-
-struct EnrolmentHashable: Hashable{
-    let studentID: Int
-    let CourseID: Int
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(studentID)
-        hasher.combine(CourseID)
-    }
-}
-
 struct ScoreEntry: Comparable {
     let studentID:UUID
     var points : Float
     static func < (lhs: ScoreEntry, rhs: ScoreEntry) -> Bool {
         return lhs.points < rhs.points
     }
-
 }
+struct Enrolment: Hashable{
+    let studentID: Int
+    let CourseID: String
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(studentID)
+        hasher.combine(CourseID)
+    
+    }
+    
+}
+
+
 @main
 struct SwiftPlayground {
     static func main() {
-        let enrolment = Enrolment(studentID: 26712, CourseID: 68321)
-        let data = try! JSONEncoder().encode(enrolment)
-        print(data)
-        let decodedEnrolment = try! JSONDecoder().decode(Enrolment.self, from: data)
-        print(decodedEnrolment)
+        let enrolment = Enrolment(studentID: 26712, CourseID: "SWE13")
+
+       
+        
+        
+
         var scoreEntries = [ScoreEntry(studentID: UUID(), points: 85.0),
                             ScoreEntry(studentID: UUID(), points: 92.5),
                             ScoreEntry(studentID: UUID(), points: 78.0)]
