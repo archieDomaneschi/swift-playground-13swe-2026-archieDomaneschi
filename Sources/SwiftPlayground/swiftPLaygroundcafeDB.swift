@@ -1,8 +1,9 @@
 import Foundation
 import GRDB
+
 ///a purchaser is the name for the reservation or purchaser at the vafe
 
-struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord{
+struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// an id given to each purchaser
     let id: Int
 
@@ -12,7 +13,7 @@ struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord{
     /// amount of people at a table
     var count: Int
 
-    /// name of the table 
+    /// name of the table
     var reservedTable: String
 
     enum CodingKeys: String, CodingKey {
@@ -22,8 +23,8 @@ struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord{
         case reservedTable = "reservedTable"
     }
 }
-/// contents of the order that is sent to the kitchen 
-struct orderLine:Codable, FetchableRecord, PersistableRecord{
+/// contents of the order that is sent to the kitchen
+struct orderLine: Codable, FetchableRecord, PersistableRecord {
     /// an id given to each purchaser
     let id: Int
 
@@ -33,7 +34,6 @@ struct orderLine:Codable, FetchableRecord, PersistableRecord{
     /// amount of people at a table
     let itemID: Int
 
-
     enum CodingKeys: String, CodingKey {
         case id = "OrdrID"
         case quantity = "Quantity"
@@ -41,7 +41,7 @@ struct orderLine:Codable, FetchableRecord, PersistableRecord{
     }
 }
 
-struct Order: Identifiable, Codable, FetchableRecord, PersistableRecord{
+struct Order: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// an id given to each order
     let id: Int
 
@@ -57,7 +57,7 @@ struct Order: Identifiable, Codable, FetchableRecord, PersistableRecord{
         case purchaserID = "PurchaserID"
     }
 }
-struct Item: Identifiable, Codable, FetchableRecord, PersistableRecord{
+struct Item: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// an id given to each item
     let id: Int
 
@@ -67,43 +67,44 @@ struct Item: Identifiable, Codable, FetchableRecord, PersistableRecord{
     /// amount of items
     var amount: Float
 
-
-
     enum CodingKeys: String, CodingKey {
         case id = "ItemID"
         case name = "Name"
         case amount = "Amount"
-        
+
     }
+
 }
-
-
+	enum Columns {
+		static let name = Column("Name")
+		static let Count = Column("Count")
+        static let reservedTable = Column("reservedTable")
+	}
 
 @main
-struct SwiftPlayground{
-    static func main(){
+struct SwiftPlayground {
+    static func main() {
         let dpath = "Sources/SwiftPlayground/cafe.db"
-        do{
+        do {
 
-            let dbqeue = try DatabaseQueue(path: dpath)
+            let dbqueue = try DatabaseQueue(path: dpath)
             print("connected to database")
             /// makes sure we are connected corrrectly
-            try dbqeue.read({database in 
-            try database.dumpSchema()})
-            try Purchaser.filter( key: 
-            "ReservedTable")
-            
-        } catch {print(error)}
+            try dbqueue.read({ database in try database.dumpSchema() })
 
-        }
+            let purchaserId: Int = 1
 
 
-
-
-
-
-
-
+            try dbqueue.read { db in
+                let purchaser = try Purchaser.fetchOne(db, key: purchaserId)
+                if let purchaser {
+                    print("Found student: \(purchaser.name)")
+                } else {
+                    print("No student with id \(purchaserId)")
+                }
+            }
+        } catch { print(error) }
 
     }
 
+}
