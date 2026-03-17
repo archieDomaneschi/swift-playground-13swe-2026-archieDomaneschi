@@ -22,6 +22,12 @@ struct Purchaser: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case count = "Count"
         case reservedTable = "reservedTable"
     }
+    enum Columns {
+        static let name = Column("Name")
+        static let Count = Column("Count")
+        static let reservedTable = Column("reservedTable")
+        static let purchaserID = Column("PurchaserID")
+    }
 }
 /// contents of the order that is sent to the kitchen
 struct orderLine: Codable, FetchableRecord, PersistableRecord {
@@ -75,11 +81,6 @@ struct Item: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 
 }
-	enum Columns {
-		static let name = Column("Name")
-		static let Count = Column("Count")
-        static let reservedTable = Column("reservedTable")
-	}
 
 @main
 struct SwiftPlayground {
@@ -90,21 +91,30 @@ struct SwiftPlayground {
             let dbqueue = try DatabaseQueue(path: dpath)
             print("connected to database")
             /// makes sure we are connected corrrectly
-            try dbqueue.read({ database in try database.dumpSchema() })
+            //try dbqueue.read({ database in try database.dumpSchema() })
 
             let purchaserId: Int = 1
-
 
             try dbqueue.read { db in
                 let purchaser = try Purchaser.fetchOne(db, key: purchaserId)
                 if let purchaser {
-                    print("Found student: \(purchaser.name)")
+                    print("Found Purchaser: \(purchaser.name)")
                 } else {
-                    print("No student with id \(purchaserId)")
+                    print("No Purchaser with ID \(purchaserId)")
+                }
+                let selectedReservedTable = ("roof top table")
+                let purchasers =
+                    try Purchaser
+                    .filter(Purchaser.Columns.reservedTable == selectedReservedTable)
+                    .order(Purchaser.Columns.name)
+                    .fetchAll(db)
+
+                for purchaser in purchasers {
+                    print("\(purchaser.name) has table \(purchaser.reservedTable)")
                 }
             }
-        } catch { print(error) }
 
+        } catch { print(error) }
     }
 
 }
