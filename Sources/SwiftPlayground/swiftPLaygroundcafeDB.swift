@@ -41,10 +41,16 @@ struct orderLine: Codable, FetchableRecord, PersistableRecord {
     let itemID: Int
 
     enum CodingKeys: String, CodingKey {
-        case id = "OrdrID"
+        case id = "OrderID"
         case quantity = "Quantity"
         case itemID = "ItemID"
     }
+    enum Columns {
+        static let itemid = Column("ItemID")
+        static let quantity = Column("Quantity")
+        static let id = Column("OrderID")
+    }
+    
 }
 
 struct Order: Identifiable, Codable, FetchableRecord, PersistableRecord, CustomStringConvertible {
@@ -155,25 +161,48 @@ struct SwiftPlayground {
                 let purchaser = try Purchaser.fetchOne(db, key: orderNumToFind)
                 if let order, let purchaser {
                     // if an order is found with the given ID, it will print out the price of the order and the name of the purchaser
-                    print("Order \(order.id) for \(purchaser.name) costs \(order.price) with \(purchaser.count) people at the table")
+                    print(
+                        "Order \(order.id) for \(purchaser.name) costs \(order.price) with \(purchaser.count) people at the table"
+                    )
                 } else {
                     // if no order is found with the given ID, it will print out a message saying that no order was found
                     print("No order with ID \(orderNumToFind)")
                 }
             }
+            /// 
+            /// - Parameters:
+            ///   - line: Line is used later as the vairable name for all found data 
+            ///   - item: item fetches Item table 
+            func printOrderLine(_ line: orderLine, item: Item) {
+            print("Item Name: \(item.name) | Item ID: \(line.itemID) | Quantity: \(line.quantity)")
+}
+            // desierd order number
+            let orderIDsearchingfor = 0
+            // opens new read only connection
+            try dbqueue.read { db in
+            // filters through the table then sets Orderline to the results 
+                let OrderLine = try orderLine.filter( orderLine.Columns.id == orderIDsearchingfor).fetchAll(db)
+                // prints out search results 
+                for line in OrderLine{
+                    let item = try Item.fetchOne(db, key: line.itemID)!
+                    printOrderLine(line, item: item)
 
+                }
+                
 
-        try dbqueue.write { db in
-            // creates a new purchaser with the name "John Doe", a count of 4, and a reserved table of "roof top table"
-            var newPurchaser = Purchaser(
-            id: nil, 
-            name: "Alex", 
-            count: 4, 
-            reservedTable: "Window Seat"
-    )
-            // inserts the new purchaser into the database
-            try newPurchaser.insert(db)
-        }
+            }
+
+            try dbqueue.write { db in
+                // creates a new purchaser with the name "John Doe", a count of 4, and a reserved table of "roof top table"
+                var newPurchaser = Purchaser(
+                    id: nil,
+                    name: "Alex",
+                    count: 4,
+                    reservedTable: "Window Seat"
+                )
+                // inserts the new purchaser into the database
+                try newPurchaser.insert(db)
+            }
         } catch { print(error) }
 
         // if any errors are thrown during the database connection or queries, it will catch the error and print it out
