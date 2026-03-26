@@ -96,7 +96,7 @@ struct SwiftPlayground {
             var nameInput = ""
             while isAllowed == false {
                 nameInput = readLine()!
-                if nameInput == "" {
+                if nameInput == ""  {
                     print("Name cannot be empty. Please enter a valid name: ", terminator: "")
                 } else {
                     isAllowed = true
@@ -112,15 +112,19 @@ struct SwiftPlayground {
             var amountInput = ""
             while isAllowed == false {
                 amountInput = readLine()!
-                if amountInput == "" || Double(amountInput) == nil {
-                    print("Amount cannot be empty or invalid. Please enter a valid amount: ", terminator: "")
+                if amountInput == "" || Double(amountInput) == nil || Double(amountInput)! <= 0 {
+                    print("Amount cannot be empty, invalid, or negative. Please enter a valid amount: ", terminator: "")
                 } else {
                     isAllowed = true
                     
                 }
             }
-                
-            let amount = Double(amountInput)!
+            // attempts to unwrap the amount input and checks if it's a valid double. If not, it prints an error message and returns.
+            guard let amount = Double(amountInput) else {
+                print("Invalid amount. Please enter a valid amount.")
+                return
+            }
+
 
             let newGuest = Guest(name: nameInput, contribution: Contribution(amount: amount))
             app.guestList.append(newGuest)
