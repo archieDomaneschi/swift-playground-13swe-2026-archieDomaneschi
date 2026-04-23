@@ -2,6 +2,7 @@
 // https://docs.swift.org/swift-book
 
 import GRDB
+import Foundation
 
 @main
 struct SwiftPlayground {
