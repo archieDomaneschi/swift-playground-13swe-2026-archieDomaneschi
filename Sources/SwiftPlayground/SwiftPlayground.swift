@@ -17,7 +17,9 @@ let mainMessage = ("""
         4: add a file? 
         
         """)
-
+    
+// currently avaialble tables
+let availableTables = "1. Loans 2. Books 3. Customers"
 /// this struct is the framework for a book with all information that is needed for a loan
 
 struct Books:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
@@ -49,6 +51,35 @@ struct Books:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringCon
         static let author = Column("Author")
         static let year = Column("Year_Published")
         static let id = Column("BookID")
+    }
+}
+
+struct Customer:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
+    /// an id given to any customer added
+    let id: Int64 
+
+    /// customer name
+    let name: String
+
+    /// custoomer phone number
+    let phoneNumber: String
+
+    /// description of customer
+    var description: String{
+        "ID: \(id) | Name: \(name) | Phone Number: \(phoneNumber)"
+    }
+/// to conform is Codable
+    enum Codingkeys: String, CodingKey{
+        case id = "ID"
+        case name = "Name"
+        case phoneNumber = "Phone Number"
+    }
+    /// because the names i have the DB dont conform to camelcase i need this 
+    enum Columns{ 
+        static let id = Column("ID")
+        static let name = Column("Name")
+        static let phoneNumber = Column("Phone_Number")
+
     }
 
 
@@ -86,12 +117,38 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int{
         }
     }
 }
+/// prints out an entire table "incomplete need to fix case 2"
+/// - Parameters:
+///   - dbQueue: to start a connection with the database 
+///   - tableNumber: the selected table the user is seeking
+func printTable(dbQueue: DatabaseQueue, tableNumber: Int){
+    do{
+        try dbQueue.read{ db in 
+    switch tableNumber{
+        case 1 : 
+            let results = try Books.fetchAll(db)
+            for result in results{
+                print(result.description)
+            }
 
-func printTable(dbQueue: DatabaseQueue, tableName: String){
-    
-    
-    
+        // will do struct later case 2 : let results = try Loan.fetchAll(db)
+        case 3 : 
+            let results = try Customer.fetchAll(db)
+            for result in results{
+                print(result.description)
+            }
+        
+        
+        
+        default:print( "please input a number")
+
+            }
+        }
+    }catch{
+        print("you ran into an error : \(error)")
     }
+
+}
 
 
 
@@ -114,22 +171,15 @@ struct SwiftPlayground {
         /// main menu fu8nction, this function prints the main menu and checks the user input is valid 
         let mainMenuOption = inputCheckNumber(prompt: mainMessage , lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
         print(mainMenuOption)
-
+        switch mainMenuOption{}
 
         
         //change to input later, placeholder rn
         /// function to fetch all records from a table and print them
         print(tables)
-        let userTable = ("1")
-        print("1. Loans 2. Books 3. Customers")
-        let selectedTable = switch userTable{
-            case "1" :  tables[0]
-            case "2":   tables[1]
-            case"3":    tables[2]
-            
-            default : ("please only pick from the above options")
-        }
-        print(selectedTable)
+
+        
+
     
         
 
