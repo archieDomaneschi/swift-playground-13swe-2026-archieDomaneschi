@@ -22,7 +22,7 @@ let mainMessage = ("""
 let availableTables = "1. Loans 2. Books 3. Customers"
 /// this struct is the framework for a book with all information that is needed for a loan
 
-struct Books:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
+struct Books:Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
     /// an id given to any book added
     let id: Int64 
 
@@ -54,7 +54,7 @@ struct Books:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringCon
     }
 }
 
-struct Customer:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
+struct Customer:Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
     /// an id given to any customer added
     let id: Int64 
 
@@ -79,6 +79,43 @@ struct Customer:Identifiable, Codable, FetchableRecord, TableRecord,CustomString
         static let id = Column("ID")
         static let name = Column("Name")
         static let phoneNumber = Column("Phone_Number")
+
+    }
+}
+
+    struct Loan:Codable, FetchableRecord, TableRecord,CustomStringConvertible, PersistableRecord{
+    /// an id given to any customer added
+    let customerID: Int
+
+    /// customer name
+    let loanID: Int
+
+    /// custoomer phone number
+    let bookID: Int
+
+    let dateBorrowed: String
+
+    let dateReturned: String
+
+    /// description of customer
+    var description: String{
+        "CustomerID: \(customerID) |BookID\(bookID) | Date Borrowed: \(dateBorrowed)"
+    }
+/// to conform is Codable
+    enum Codingkeys: String, CodingKey{
+        case customerid = "CustomerID"
+        case loanID = "LoanID"
+        case bookID = "BookID"
+        case dateBorrowed = "DateBorrowed"
+        case dateReturned = "DateReturned"
+    }
+    /// because the names i have the DB dont conform to camelcase i need this 
+    enum Columns{ 
+        static let customerID = Column("CustomerID")
+        static let loanID = Column("LoanID")
+        static let bookID = Column("BookID")
+        static let dateBorrowed = Column("DateBorrowed")
+        static let dateReturned = Column("DateReturned")
 
     }
 
@@ -121,7 +158,8 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int{
 /// - Parameters:
 ///   - dbQueue: to start a connection with the database 
 ///   - tableNumber: the selected table the user is seeking
-func printTable(dbQueue: DatabaseQueue, tableNumber: Int){
+func printTable(dbQueue: DatabaseQueue){
+    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
     do{
         try dbQueue.read{ db in 
     switch tableNumber{
@@ -131,7 +169,12 @@ func printTable(dbQueue: DatabaseQueue, tableNumber: Int){
                 print(result.description)
             }
 
-        // will do struct later case 2 : let results = try Loan.fetchAll(db)
+        case 2 : let results = try Loan.fetchAll(db)
+            for result in results{
+                print(result.description)
+            }
+        
+        
         case 3 : 
             let results = try Customer.fetchAll(db)
             for result in results{
@@ -152,6 +195,7 @@ func printTable(dbQueue: DatabaseQueue, tableNumber: Int){
 
 
 
+
 @main
 struct SwiftPlayground {
 
@@ -168,11 +212,23 @@ struct SwiftPlayground {
 
         print("Welcome to the onslow library")
     
-        /// main menu fu8nction, this function prints the main menu and checks the user input is valid 
+        /// main menu function, this function prints the main menu and checks the user input is valid 
         let mainMenuOption = inputCheckNumber(prompt: mainMessage , lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
         print(mainMenuOption)
-        switch mainMenuOption{}
 
+        
+        switch mainMenuOption{
+            case 1: 
+                print("you have chosen to find a singular file")
+            case 2: 
+                printTable(dbQueue: dbQueue)
+            case 3: 
+                print("you have chosen to delete a file")
+            case 4: 
+                print(" you have chosen to add a file")
+        default:
+            print("please pick an option  from the list")
+        }
         
         //change to input later, placeholder rn
         /// function to fetch all records from a table and print them
