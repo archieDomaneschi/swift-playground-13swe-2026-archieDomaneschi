@@ -20,9 +20,9 @@ let mainMessage = ("""
 
 /// this struct is the framework for a book with all information that is needed for a loan
 
-struct Books:Identifiable, Codable, FetchableRecord, TableRecord{
+struct Books:Identifiable, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
     /// an id given to any book added
-    let id: Int? 
+    let id: Int64 
 
     /// title of the book
     let title: String
@@ -32,6 +32,10 @@ struct Books:Identifiable, Codable, FetchableRecord, TableRecord{
 
     /// year the book was published
     let year : String
+
+    var description: String{
+        "book ID: \(id) | Title: \(title) | Author: \(author) | Date of Publication: \(year)"
+    }
 /// to conform is Codable
     enum Codingkeys: String, CodingKey{
         case id = "BookID"
@@ -46,6 +50,8 @@ struct Books:Identifiable, Codable, FetchableRecord, TableRecord{
         static let year = Column("Year_Published")
         static let id = Column("BookID")
     }
+
+
 
 
 
@@ -81,6 +87,14 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int{
     }
 }
 
+func printTable(dbQueue: DatabaseQueue, tableName: String){
+    
+    
+    
+    }
+
+
+
 @main
 struct SwiftPlayground {
 
@@ -97,9 +111,11 @@ struct SwiftPlayground {
 
         print("Welcome to the onslow library")
     
-
+        /// main menu fu8nction, this function prints the main menu and checks the user input is valid 
         let mainMenuOption = inputCheckNumber(prompt: mainMessage , lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
         print(mainMenuOption)
+
+
         
         //change to input later, placeholder rn
         /// function to fetch all records from a table and print them
