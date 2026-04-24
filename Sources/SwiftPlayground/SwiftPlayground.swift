@@ -24,7 +24,7 @@ let availableTables = "1. Loans 2. Books 3. Customers"
 
 struct Books:Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,CustomStringConvertible{
     /// an id given to any book added
-    let id: Int64 
+    let id: Int 
 
     /// title of the book
     let title: String
@@ -39,7 +39,7 @@ struct Books:Identifiable, PersistableRecord, Codable, FetchableRecord, TableRec
         "book ID: \(id) | Title: \(title) | Author: \(author) | Date of Publication: \(year)"
     }
 /// to conform is Codable
-    enum Codingkeys: String, CodingKey{
+    enum CodingKeys: String, CodingKey{
         case id = "BookID"
         case title = "Title"
         case author = "Author"
@@ -69,10 +69,10 @@ struct Customer:Identifiable, PersistableRecord, Codable, FetchableRecord, Table
         "ID: \(id) | Name: \(name) | Phone Number: \(phoneNumber)"
     }
 /// to conform is Codable
-    enum Codingkeys: String, CodingKey{
+    enum CodingKeys: String, CodingKey{
         case id = "ID"
         case name = "Name"
-        case phoneNumber = "Phone Number"
+        case phoneNumber = "Phone_Number"
     }
     /// because the names i have the DB dont conform to camelcase i need this 
     enum Columns{ 
@@ -83,31 +83,31 @@ struct Customer:Identifiable, PersistableRecord, Codable, FetchableRecord, Table
     }
 }
 
-    struct Loan:Codable, FetchableRecord, TableRecord,CustomStringConvertible, PersistableRecord{
+struct Loan:Codable, FetchableRecord, TableRecord,CustomStringConvertible, PersistableRecord{
     /// an id given to any customer added
     let customerID: Int
 
-    /// customer name
+    /// so the loan is findable in future
     let loanID: Int
 
-    /// custoomer phone number
+    /// so an order can be allocated with a book 
     let bookID: Int
-
+    /// date book was borrowed
     let dateBorrowed: String
-
+    /// date book was returned
     let dateReturned: String
 
     /// description of customer
     var description: String{
         "CustomerID: \(customerID) |BookID\(bookID) | Date Borrowed: \(dateBorrowed)"
     }
-/// to conform is Codable
-    enum Codingkeys: String, CodingKey{
-        case customerid = "CustomerID"
+/// to conform to Codable
+    enum CodingKeys: String, CodingKey{
+        case customerID = "CustomerID"
         case loanID = "LoanID"
         case bookID = "BookID"
         case dateBorrowed = "DateBorrowed"
-        case dateReturned = "DateReturned"
+        case dateReturned = "DateReturn"
     }
     /// because the names i have the DB dont conform to camelcase i need this 
     enum Columns{ 
@@ -139,6 +139,7 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int{
         if let input = readLine(), let userNumber = Int(input){
             //checks if the user input is between the specifed boundries 
             if  userNumber >= lowerBound && userNumber <= upperBound {
+                
                 return userNumber
             }
             else{
@@ -159,6 +160,8 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int{
 ///   - dbQueue: to start a connection with the database 
 ///   - tableNumber: the selected table the user is seeking
 func printTable(dbQueue: DatabaseQueue){
+    system("clear")
+    print("you have ch0sen to view a full table, available options: ")
     let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
     do{
         try dbQueue.read{ db in 
@@ -232,7 +235,7 @@ struct SwiftPlayground {
         
         //change to input later, placeholder rn
         /// function to fetch all records from a table and print them
-        print(tables)
+
 
         
 
