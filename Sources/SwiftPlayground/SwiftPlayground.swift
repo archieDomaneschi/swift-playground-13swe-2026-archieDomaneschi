@@ -4,6 +4,19 @@
 import Foundation
 import GRDB
 let tables = ["Books", "Loan,", "Customer"]
+// used to compare user input to limiatations in main menu 
+let mainMenuLowerBound = 1
+// used to compare the user input in the main menu to the upper bound
+let mainMenuupperBound = 4
+// main menu message that is printed anytime the user naviates to the main menu 
+let mainMessage = ("""
+        would you like to: 
+        1: find a singular file? 
+        2: print an entire table? 
+        3: delete a file? 
+        4: add a file? 
+        
+        """)
 
 /// this struct is the framework for a book with all information that is needed for a loan
 
@@ -37,6 +50,36 @@ struct Books:Identifiable, Codable, FetchableRecord, TableRecord{
 
 
 }
+/// input checker for number returns 
+/// - Parameters: 
+///   - prompt: the prompt the user is responding to
+///   - lowerBound:the lower boundry of their answers  
+///   - upperBound: the upper boundry of their answers 
+/// - Returns: when both bounds are satisfied returns the user input 
+func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int{ 
+    // will not be broken until a safe asnwer is passed 
+    while true{ 
+        //prompt the user interacts with
+        print(prompt)
+        //checks if the user has inuted something and then if it is a number 
+        if let input = readLine(), let userNumber = Int(input){
+            //checks if the user input is between the specifed boundries 
+            if  userNumber >= lowerBound && userNumber <= upperBound {
+                return userNumber
+            }
+            else{
+                // if the input is out of bounds but a number this error is thrown
+                system("clear")
+                print(userNumber)
+                print("please ensure your input is between \(lowerBound) and \(upperBound)")
+            }
+        } else{
+            // if the answer is not a number or nill this is thrown 
+            system("clear")
+            print("please make sure you input a number ")
+        }
+    }
+}
 
 @main
 struct SwiftPlayground {
@@ -53,20 +96,13 @@ struct SwiftPlayground {
 
 
         print("Welcome to the onslow library")
-        print("""
-        would you like to: 
-        1: find a singular file? 
-        2: print an entire table? 
-        3: delete a file? 
-        4: add a file? 
-        
-        """)
-        // hard coding a number rn will later ask for an input 
-        let userDecision = ("1")
+    
+
+        let mainMenuOption = inputCheckNumber(prompt: mainMessage , lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
+        print(mainMenuOption)
         
         //change to input later, placeholder rn
         /// function to fetch all records from a table and print them
-
         print(tables)
         let userTable = ("1")
         print("1. Loans 2. Books 3. Customers")
