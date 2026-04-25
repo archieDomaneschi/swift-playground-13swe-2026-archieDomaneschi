@@ -4,7 +4,7 @@
 import Foundation
 import GRDB
 
-let tables = ["Books", "Loan,", "Customer"]
+let tables = ["Loan", "Books", "Customer"]
 // used to compare user input to limiatations in main menu
 let mainMenuLowerBound = 1
 // used to compare the user input in the main menu to the upper bound
@@ -22,8 +22,15 @@ let mainMessage =
 
 // currently avaialble tables
 let availableTables = "1. Loans 2. Books 3. Customers"
-/// this struct is the framework for a book with all information that is needed for a loan
+// used when searching for an id as the number can be infinietly large but never less than 0
+let IDsLowerBound: Int = 0
+// to avoid magic numbers this is used when ever the user has to select a table, any search, write or delete function
+let tablesUpbound = 3
 
+// same as above this is used anytime the user is asked for an input for a table
+let tablesLowerBound = 1
+
+/// this struct is the framework for a book with all information that is needed for a loan
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
@@ -126,7 +133,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
     }
 
 }
-/// input checker for number returns
+/// input checker for number returns with boundries
 /// - Parameters:
 ///   - prompt: the prompt the user is responding to
 ///   - lowerBound:the lower boundry of their answers
@@ -156,7 +163,37 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int {
         }
     }
 }
-/// prints out an entire table when the user selctes print table form the main menu currently 
+
+/// input checker for number returns with no upper bound (IDs)
+/// - Parameters:
+///   - prompt: the prompt the user is responding to
+///   - lowerBound:the lower boundry of their answers
+/// - Returns: when both bounds are satisfied returns the user input
+func inputCheckNumberNoUpBoundry(prompt: String, lowerBound: Int, ) -> Int {
+    // will not be broken until a safe asnwer is passed
+    while true {
+        //prompt the user interacts with
+        print(prompt)
+        //checks if the user has inuted something and then if it is a number
+        if let input = readLine(), let userNumber = Int(input) {
+            //checks if the user input is between the specifed boundries
+            if userNumber >= lowerBound {
+
+                return userNumber
+            } else {
+                // if the input is out of bounds but a number this error is thrown
+                system("clear")
+                print(userNumber)
+                print("please ensure your input is above \(lowerBound) ")
+            }
+        } else {
+            // if the answer is not a number or nill this is thrown
+            system("clear")
+            print("please make sure you input a number ")
+        }
+    }
+}
+/// prints out an entire table when the user selctes print table form the main menu currently
 /// - Parameters:
 ///   - dbQueue: to start a connection with the database
 ///   - tableNumber: the selected table the user is seeking
@@ -165,26 +202,32 @@ func printTable(dbQueue: DatabaseQueue) {
     system("clear")
     print("you have chosen to view a full table, available options: ")
     // using the function before I get the number associated with the table the user is after
-    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
+    let tableNumber = inputCheckNumber(
+        prompt: availableTables, lowerBound: tablesLowerBound,
+        upperBound: tablesUpbound)
     do {
         ///opens a qeuery
         try dbQueue.read { db in
             switch tableNumber {
-            /// if the user slectes case1 it prints the loan table 
+            /// if the user slectes case1 it prints the loan table
             case 1:
                 let results = try Loan.fetchAll(db)
+                /// cycles through the results suing the description message
                 for result in results {
                     print(result.description)
                 }
             /// if the user selets 2 is prints the books table
             case 2:
                 let results = try Books.fetchAll(db)
+                /// cycles through the results suing the description message
                 for result in results {
                     print(result.description)
                 }
             /// if the user selctes table 3 loans is printed
             case 3:
+                ///trys to fetch all recors, stores them in results
                 let results = try Customer.fetchAll(db)
+                /// cycles through the results suing the description message
                 for result in results {
                     print(result.description)
                 }
@@ -198,42 +241,77 @@ func printTable(dbQueue: DatabaseQueue) {
     }
 
 }
-
-@main
-struct SwiftPlayground {
-
-    static func main() {
-
-        let dbPath = "Sources/SwiftPlayground/library.db"
-        guard let dbQueue = try? DatabaseQueue(path: dbPath) else {
-            print("Could not open database.")
-            return
+func findSingle(dbQueue: DatabaseQueue) {
+    // clear all old now non essential info
+    system("clear")
+    print("you have chosen to search for a singular record, available tables: ")
+    // using the function before I get the number associated with the table the user is after
+    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
+    print(" you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for")
+    let userSingleQuery = inputCheckNumberNoUpBoundry(prompt: ":", lowerBound: IDsLowerBound)
+    do {
+        try dbQueue.read { db in
+            switch tableNumber {
+            case 1:
+                if let result = try Loan.fetchOne(db, key: userSingleQuery) {
+                    print(result.description)
+                } else {
+                    print("no record with ID: \(userSingleQuery) could be found")
+                }
+            case 2:
+                if let result = try Books.fetchOne(db, key: userSingleQuery) {
+                    print(result.description)
+                } else {
+                    print("no record with ID: \(userSingleQuery) could be found")
+                }
+            case 3:
+                if let result = try Customer.fetchOne(db, key: userSingleQuery) {
+                    print(result.description)
+                } else {
+                    print("no record with ID: \(userSingleQuery) could be found")
+                }
+            default: print("no ID could be found")
+            }
         }
-        print("Connected to database.")
+    } catch { print("you ran into an error: \(error)") }
 
-        print("Welcome to the onslow library")
+    @main
+    struct SwiftPlayground {
 
-        /// main menu function, this function prints the main menu and checks the user input is valid
-        let mainMenuOption = inputCheckNumber(
-            prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
-        print(mainMenuOption)
+        static func main() {
+            let dbPath = "Sources/SwiftPlayground/library.db"
+            /// trying to connect to database, sends an error f its unable
+            guard let dbQueue = try? DatabaseQueue(path: dbPath) else {
+                print("Could not open database.")
+                return
+            }
+            print("Connected to database.")
 
-        switch mainMenuOption {
-        case 1:
-            print("you have chosen to find a singular file")
-        case 2:
-            printTable(dbQueue: dbQueue)
-        case 3:
-            print("you have chosen to delete a file")
-        case 4:
-            print(" you have chosen to add a file")
-        default:
-            print("please pick an option  from the list")
+            print("Welcome to the onslow library main menu")
+
+            /// main menu function, this function prints the main menu and checks the user input is valid
+            let mainMenuOption = inputCheckNumber(
+                prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
+            /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
+            switch mainMenuOption {
+            case 1:
+                // finds a single record based off of primary key
+                findSingle(dbQueue: dbQueue)
+            case 2:
+                // prints an entire table
+                printTable(dbQueue: dbQueue)
+            case 3:
+                print("you have chosen to delete a file")
+            case 4:
+                print(" you have chosen to add a file")
+            default:
+                print("please pick an option  from the list")
+            }
+
+            //change to input later, placeholder rn
+            /// function to fetch all records from a table and print them
+
+            /// function to search for a specfic record
         }
-
-        //change to input later, placeholder rn
-        /// function to fetch all records from a table and print them
-
-        /// function to search for a specfic record
     }
 }
