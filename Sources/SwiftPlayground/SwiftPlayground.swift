@@ -333,13 +333,14 @@ func addCustomer(dbQueue: DatabaseQueue){
             phoneNumber: stringGrabber(lowerBound: shortestPhoneNumber,
             upperBound: longestPhoneNumber, prompt: phoneNumberPrompt)
     )
-    ///trys to input the new customer throws an error if fails
+    ///trys to input the new customer throws an error if fails 
     try newCustomer.insert(db)
 
     }
     print("customer added succesfully")
     }catch{print("ran into an error : \(error)")}
 }
+
 
 
     @main
