@@ -34,8 +34,8 @@ let tablesLowerBound = 1
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
-    /// an id given to any book added
-    let id: Int
+    /// an id given to any book added, useing UUId so the code creates  a new one for any new book added
+    let id: UUID
 
     /// title of the book
     let title: String
@@ -68,8 +68,8 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
-    /// an id given to any customer added
-    let id: Int64
+    /// an id given to any customer added, uses UUID so the swift code passes value to db instead of db creating one
+    let id: UUID
 
     /// customer name
     let name: String
@@ -83,13 +83,13 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
-        case id = "ID"
+        case id = "ustomerID"
         case name = "Name"
         case phoneNumber = "Phone_Number"
     }
     /// because the names i have the DB dont conform to camelcase i need this
     enum Columns {
-        static let id = Column("ID")
+        static let id = Column("CustomerID")
         static let name = Column("Name")
         static let phoneNumber = Column("Phone_Number")
 
@@ -100,8 +100,8 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
     /// an id given to any customer added
     let customerID: Int
 
-    /// so the loan is findable in future
-    let loanID: Int
+    /// so the loan is findable in future, set to UUID so swift auto creates an ID when passing to the db
+    let loanID: UUID
 
     /// so an order can be allocated with a book
     let bookID: Int
