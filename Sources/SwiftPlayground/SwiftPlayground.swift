@@ -348,6 +348,9 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
         }
     }
 }
+
+
+
 /// date grabber grabs the days date of when ever the user is taking out a book
 /// - Returns: date in dd-mm-yyyy format
 func dateGrabber() -> String {
@@ -357,6 +360,31 @@ func dateGrabber() -> String {
     let dateFormatted = formatter.string(from: dateNow)
     return dateFormatted
 }
+
+
+/// 
+/// - Parameter
+///   - checkId: the ID thats saftey needs to be checked
+
+/// - Returns: 
+func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableChecked: String) -> Bool{
+    do {
+        try dbQueue.read{db in switch tableChecked {
+
+            case "Customer": if (try Customer.fetchOne(db, key: checkId)) != nil{
+                return true
+            } else{ return false}
+            case "Books": if((try Books.fetchOne(db, key:checkId)) != nil){
+                return true
+            }else{
+                return false
+            }
+            default: print("error! this is not an option")
+            return false
+}
+        }
+    }catch{print(error)}
+    return false
 /// adds a singular customer to the database
 /// - Parameter dbQueue: passes the connection to the database to the function 
 func addCustomer(dbQueue: DatabaseQueue) {
