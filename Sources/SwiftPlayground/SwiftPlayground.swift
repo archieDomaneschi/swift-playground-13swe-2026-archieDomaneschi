@@ -30,6 +30,24 @@ let tablesUpbound = 3
 // same as above this is used anytime the user is asked for an input for a table
 let tablesLowerBound = 1
 
+// shortes a name can be is 2 letters long EG "io"
+let shortestName = 2
+
+// allowing ample length for any name 
+let longestName = 75
+
+// the shortest phone number belongs to Niue at 4
+let shortestPhoneNumber = 4
+
+//the longhest phone number is 15
+let longestPhoneNumber = 15
+
+// prompt used when asking for customer first name in addCustomer function 
+let firstNamePrompt = ("what is the customers first name? ")
+// prompt used when asking for customer first name in addCustomer function 
+let lastNamePrompt = ("what is the customers last name? ")
+// prompt used when asking for customer first name in addCustomer function 
+let phoneNumberPrompt = ("what is the customers phone number? ")
 /// this struct is the framework for a book with all information that is needed for a loan
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
@@ -47,7 +65,8 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
     let year: String
 
     var description: String {
-        "book ID: \(id) | Title: \(title) | Author: \(author) | Date of Publication: \(year)"
+        // see testing table for source of default and the solution i used
+        "book ID: \(id, default: "N/A") | Title: \(title) | Author: \(author) | Date of Publication: \(year)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -72,26 +91,31 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     let id: Int?
 
     /// customer name
-    let name: String
+    let firstName: String
 
+    ///customer last name
+    
+    let lastName: String
     /// custoomer phone number
     let phoneNumber: String
 
     /// description of customer
     var description: String {
         // *note* used VS code and a google to : "https://surl.lt/mdhdpd"
-        "ID: \(id, default: "N/A" ) | Name: \(name) | Phone Number: \(phoneNumber)"
+        "ID: \(id, default: "N/A" ) | Name: \(firstName) \(lastName) | Phone Number: \(phoneNumber)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
         case id = "CustomerID"
-        case name = "Name"
+        case firstName = "FirstName"
+        case lastName = "LastName"
         case phoneNumber = "Phone_Number"
     }
     /// because the names i have the DB dont conform to camelcase i need this
     enum Columns {
         static let id = Column("CustomerID")
-        static let name = Column("Name")
+        static let firstName = Column("FirstName")
+        static let lastName = ("LastName")
         static let phoneNumber = Column("Phone_Number")
 
     }
@@ -149,7 +173,6 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int {
         if let input = readLine(), let userNumber = Int(input) {
             //checks if the user input is between the specifed boundries
             if userNumber >= lowerBound && userNumber <= upperBound {
-
                 return userNumber
             } else {
                 // if the input is out of bounds but a number this error is thrown
@@ -175,8 +198,9 @@ func inputCheckNumberNoUpBoundry(prompt: String, lowerBound: Int, ) -> Int {
     while true {
         //prompt the user interacts with
         print(prompt)
-        //checks if the user has inuted something and then if it is a number
-        if let input = readLine(), let userNumber = Int(input) {
+        //checks if the user has inuted something and then if it is a number 
+        if let input = readLine(), let userNumber = Int(input)  {
+            
             //checks if the user input is between the specifed boundries
             if userNumber >= lowerBound {
 
@@ -242,6 +266,8 @@ func printTable(dbQueue: DatabaseQueue) {
     }
 
 }
+/// find single, finds a singular record based off of  the ID used in main menu function 
+/// - Parameter dbQueue: passes the connection to the db to the function
 func findSingle(dbQueue: DatabaseQueue) {
     // clear all old now non essential info
     system("clear")
@@ -276,6 +302,46 @@ func findSingle(dbQueue: DatabaseQueue) {
         }
     } catch { print("you ran into an error: \(error)") }
 
+}
+
+/// 
+/// - Parameters:
+///   - lowerBound: the lowest length the string the function is grabbing can be
+///   - upperBound: the longest the string the function is grabbing can be
+///   - prompt: the prompt the user is answering
+/// - Returns: returns a string to where ever it was called from once the input satisfies all inputs 
+func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String{
+    print(prompt)
+    while true{
+        if let userInputString = readLine(){
+            let stringLength = userInputString.count
+                if stringLength >= lowerBound && stringLength <= upperBound{
+                    return userInputString
+                } else{ print("please ensure your input is longer than \(lowerBound) and shorter than \(upperBound)")}
+    }else{print("please ensure your input contains only letters and no numbers ")}
+    }
+}
+/// adds a singular customer to the database
+/// - Parameter dbQueue: 
+func addCustomer(dbQueue: DatabaseQueue){
+    do{
+    try dbQueue.write{ db in 
+    let newCustomer = Customer(
+            id: nil,
+            firstName: stringGrabber(lowerBound: shortestName , upperBound: longestName,prompt: firstNamePrompt),
+            lastName: stringGrabber(lowerBound: shortestName , upperBound: longestName,prompt: lastNamePrompt),
+            phoneNumber: stringGrabber(lowerBound: shortestPhoneNumber,
+            upperBound: longestPhoneNumber, prompt: phoneNumberPrompt)
+    )
+    ///trys to input the new customer throws an error if fails
+    try newCustomer.insert(db)
+
+    }
+    print("customer added succesfully")
+    }catch{print("ran into an error : \(error)")}
+}
+
+
     @main
     struct SwiftPlayground {
 
@@ -304,9 +370,10 @@ func findSingle(dbQueue: DatabaseQueue) {
             case 3:
                 print("you have chosen to delete a file")
             case 4:
-                print(" you have chosen to add a file")
+                addCustomer(dbQueue: dbQueue)
             default:
-                print("please pick an option  from the list")
+                print("please choose one of the above options")
+                
             }
 
             //change to input later, placeholder rn
@@ -315,4 +382,4 @@ func findSingle(dbQueue: DatabaseQueue) {
             /// function to search for a specfic record
         }
     }
-}
+
