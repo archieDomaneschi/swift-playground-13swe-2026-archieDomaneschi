@@ -367,46 +367,24 @@ func addCustomer(dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             switch tableNumber {
-
             // only trriggers when user inputs a 1
             case 1:
-            /// while loop that is only exiteed when the user inputs a valid customer and book id, this avoids the -
-            /// db trying to add a record to the loans table that does not exist
-                while true {
-                    /// gets the user input for the customerID using the no upper boundry
-                    let userCustomerID = inputCheckNumberNoUpBoundry(
-                        prompt: customerIdPrompt, lowerBound: IDsLowerBound)
-                    ///grabs the user input the bookID using no upperboundry
-                    let userBookID =  inputCheckNumberNoUpBoundry(
-                                prompt: bookIdPrompt, lowerBound: IDsLowerBound)
-                    /// before it trys to create the record the code checks if the customer id exists
-                    if (try Customer.fetchOne(db, key: userCustomerID)) != nil {
-                        /// if the customer ID exists it then checks if the book id exists
-                        if (try Books.fetchOne(db, key: userBookID)) != nil {
-                            /// only once we know the book and customer exists does the code create the record
-                        let newLoan = Loan(
-                            /// using the checked customer ID 
-                            customerID: userCustomerID,
+       /// only once we know the book and customer exists does the code create the record
+                let newLoan = Loan(
+                /// using the checked customer ID 
+                customerID:  inputCheckNumberNoUpBoundry(
+                prompt: customerIdPrompt, lowerBound: IDsLowerBound),
 
-                            /// leaves Loan ID blank for the Db to auto incriment
-                            loanID: nil,
-                            /// by now book id has beeen checked as safe
-                            bookID: userBookID,
+                /// leaves Loan ID blank for the Db to auto incriment
+                loanID: nil,
+                /// by now book id has beeen checked as safe
+                bookID: inputCheckNumberNoUpBoundry(
+                prompt: bookIdPrompt, lowerBound: IDsLowerBound),
 
-                            /// uses dategrabber function to grab the date the book was handed out
-                            dateBorrowed: dateGrabber(), dateReturned: nil)
-                        /// will try to add the information to the loans table 
-                        try newLoan.insert(db)
-                        break
-                    /// if the book ID doesnt exist this code is ran and it goes back to the top of the while loop 
-                    } else{print("no book has the id \(userBookID)")}
-                    /// if the book ID exists but the customer ID doesnt this code is ran 
-                    } else {
-                        print("no customer has ID \(userCustomerID)")
-                    }
-                }
-            /// uses 2 functions, inputchecknumbernoupboundry to get customer ID and BookID
-
+                /// uses dategrabber function to grab the date the book was handed out
+                dateBorrowed: dateGrabber(), dateReturned: nil)
+                /// will try to add the information to the loans table 
+                try newLoan.insert(db)
             // only triggers when user inputs a 3
             case 3:
                 let newCustomer = Customer(
