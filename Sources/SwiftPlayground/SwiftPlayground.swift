@@ -33,7 +33,7 @@ let tablesLowerBound = 1
 // shortes a name can be is 2 letters long EG "io"
 let shortestName = 2
 
-// allowing ample length for any name 
+// allowing ample length for any name
 let longestName = 75
 
 // the shortest phone number belongs to Niue at 4
@@ -45,22 +45,20 @@ let longestPhoneNumber = 15
 // the prompt used when adding a loan to the loan table, this is used in the addrecord function for customer ID
 let customerIdPrompt = ("please input the ID of the customer seeking to take out a loan: ")
 
-//the prompt used in the addrecord function to get the book ID of the desierd loan 
+//the prompt used in the addrecord function to get the book ID of the desierd loan
 let bookIdPrompt = ("please input the ID of the book the customer is seeking to loan out:")
 
 //the prompt used when asking the user to input the date of loan
 let dateBorrowedPrompt = ("please input todays date:")
 
-// prompt used when asking for customer first name in addCustomer function 
+// prompt used when asking for customer first name in addCustomer function
 let firstNamePrompt = ("what is the customers first name? ")
-// prompt used when asking for customer first name in addCustomer function 
+// prompt used when asking for customer first name in addCustomer function
 let lastNamePrompt = ("what is the customers last name? ")
-// prompt used when asking for customer first name in addCustomer function 
+// prompt used when asking for customer first name in addCustomer function
 let phoneNumberPrompt = ("what is the customers phone number? ")
 
-
-
-/// this struct is the framework for a book with all information that is needed to create a new book 
+/// this struct is the framework for a book with all information that is needed to create a new book
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
@@ -99,14 +97,14 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
-    /// an id given to any customer added, optional so i can pass null values and let GRDB create a new ID 
+    /// an id given to any customer added, optional so i can pass null values and let GRDB create a new ID
     let id: Int?
 
     /// customer name
     let firstName: String
 
     ///customer last name
-    
+
     let lastName: String
     /// custoomer phone number
     let phoneNumber: String
@@ -137,7 +135,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
     /// an id given to any customer added,
     let customerID: Int
 
-    /// so the loan is findable in future, optional to let GRDB create a new ID 
+    /// so the loan is findable in future, optional to let GRDB create a new ID
     let loanID: Int?
 
     /// so an order can be allocated with a book
@@ -210,9 +208,9 @@ func inputCheckNumberNoUpBoundry(prompt: String, lowerBound: Int, ) -> Int {
     while true {
         //prompt the user interacts with
         print(prompt)
-        //checks if the user has inuted something and then if it is a number 
-        if let input = readLine(), let userNumber = Int(input)  {
-            
+        //checks if the user has inuted something and then if it is a number
+        if let input = readLine(), let userNumber = Int(input) {
+
             //checks if the user input is between the specifed boundries
             if userNumber >= lowerBound {
 
@@ -278,7 +276,7 @@ func printTable(dbQueue: DatabaseQueue) {
     }
 
 }
-/// find single, finds a singular record based off of  the ID used in main menu function 
+/// find single, finds a singular record based off of  the ID used in main menu function
 /// - Parameter dbQueue: passes the connection to the db to the function
 func findSingle(dbQueue: DatabaseQueue) {
     // clear all old now non essential info
@@ -286,7 +284,9 @@ func findSingle(dbQueue: DatabaseQueue) {
     print("you have chosen to search for a singular record, available tables: ")
     // using the function before I get the number associated with the table the user is after
     let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
-    print(" you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for")
+    print(
+        " you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for"
+    )
     let userSingleQuery = inputCheckNumberNoUpBoundry(prompt: ":", lowerBound: IDsLowerBound)
     do {
         try dbQueue.read { db in
@@ -316,34 +316,41 @@ func findSingle(dbQueue: DatabaseQueue) {
 
 }
 
-/// String grabber, function that safely unwraps a string and checks if it meets requerments of length 
+/// String grabber, function that safely unwraps a string and checks if it meets requerments of length
 /// - Parameters:
 ///   - lowerBound: the lowest length the string the function is grabbing can be
 ///   - upperBound: the longest the string the function is grabbing can be
 ///   - prompt: the prompt the user is answering
-/// - Returns: returns a string to where ever it was called from once the input satisfies all inputs 
-func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String{
+/// - Returns: returns a string to where ever it was called from once the input satisfies all inputs
+func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
     print(prompt)
-    while true{
-        if let userInputString = readLine(){
+    while true {
+        if let userInputString = readLine() {
             let stringLength = userInputString.count
             // checks if upperbound == 0, this is the number i use for no upper bound
-            if upperBound == 0 && stringLength >= lowerBound{
+            if upperBound == 0 && stringLength >= lowerBound {
                 // if upperbound is 0 and input is longer than lower bound it returns the value
-                return userInputString}
+                return userInputString
+            }
             // if upperbound is not 0 it runs the normal check if it is between boundries
-                else{
-                if stringLength >= lowerBound && stringLength <= upperBound{
-                return userInputString}
-                else{ print("please ensure your input is longer than \(lowerBound) and shorter than \(upperBound)")}
-                }  
-                    
-    }else{print("please ensure your input contains only letters and no numbers ")}
+            else {
+                if stringLength >= lowerBound && stringLength <= upperBound {
+                    return userInputString
+                } else {
+                    print(
+                        "please ensure your input is longer than \(lowerBound) and shorter than \(upperBound)"
+                    )
+                }
+            }
+
+        } else {
+            print("please ensure your input contains only letters and no numbers ")
+        }
     }
 }
-/// date grabber grabs the days date of when ever the user is taking out a book 
+/// date grabber grabs the days date of when ever the user is taking out a book
 /// - Returns: date in dd-mm-yyyy format
-func dateGrabber() -> String{
+func dateGrabber() -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = "dd-MM-yyyy"
     let dateNow = Date()
@@ -351,88 +358,117 @@ func dateGrabber() -> String{
     return dateFormatted
 }
 /// adds a singular customer to the database
-/// - Parameter dbQueue: 
-func addCustomer(dbQueue: DatabaseQueue){
+/// - Parameter dbQueue: passes the connection to the database to the function 
+func addCustomer(dbQueue: DatabaseQueue) {
     print(" you have chosen to add a record to a table, your options are:")
-    let tableNumber = inputCheckNumber(prompt: availableTables, 
-    lowerBound: tablesLowerBound, upperBound: tablesUpbound)
-    do{
-    try dbQueue.write{ db in 
-    switch tableNumber{
-            // only trriggers when user inputs a 1 
-        case 1: let newLoan = Loan( 
-        /// uses 2 functions, inputchecknumbernoupboundry to get customer ID and Bookid
-        customerID: inputCheckNumberNoUpBoundry(prompt: customerIdPrompt, lowerBound: IDsLowerBound), 
-        /// leavs Loan ID blank for the Db to auto incriment 
-        loanID: nil, 
-        bookID: inputCheckNumberNoUpBoundry(prompt: bookIdPrompt, lowerBound: IDsLowerBound), 
-        /// uses dategrabber function to grab the date the book was handed out
-        dateBorrowed: dateGrabber(), dateReturned: nil) 
-        try newLoan.insert(db)
-        // only triggers when user inputs a 3 
-        case 3:let newCustomer = Customer(
-            // leave ID nil and let DB auto incriment a new ID
-            id: nil,
-            /// next three lines all grab customer infomration using string grabber 
-            firstName: stringGrabber(lowerBound: shortestName , upperBound: longestName,prompt: firstNamePrompt),
-            lastName: stringGrabber(lowerBound: shortestName , upperBound: longestName,prompt: lastNamePrompt),
-            phoneNumber: stringGrabber(lowerBound: shortestPhoneNumber,
-            upperBound: longestPhoneNumber, prompt: phoneNumberPrompt))
-            // trys to add in all customer details, because of functions used userinputs are safe by here
-            try newCustomer.insert(db)
+    let tableNumber = inputCheckNumber(
+        prompt: availableTables,
+        lowerBound: tablesLowerBound, upperBound: tablesUpbound)
+    do {
+        try dbQueue.write { db in
+            switch tableNumber {
 
-        default: print("that was not an option sorry")
+            // only trriggers when user inputs a 1
+            case 1:
+            /// while loop that is only exiteed when the user inputs a valid customer and book id, this avoids the -
+            /// db trying to add a record to the loans table that does not exist
+                while true {
+                    /// gets the user input for the customerID using the no upper boundry
+                    let userCustomerID = inputCheckNumberNoUpBoundry(
+                        prompt: customerIdPrompt, lowerBound: IDsLowerBound)
+                    ///grabs the user input the bookID using no upperboundry
+                    let userBookID =  inputCheckNumberNoUpBoundry(
+                                prompt: bookIdPrompt, lowerBound: IDsLowerBound)
+                    /// before it trys to create the record the code checks if the customer id exists
+                    if (try Customer.fetchOne(db, key: userCustomerID)) != nil {
+                        /// if the customer ID exists it then checks if the book id exists
+                        if (try Books.fetchOne(db, key: userBookID)) != nil {
+                            /// only once we know the book and customer exists does the code create the record
+                        let newLoan = Loan(
+                            /// using the checked customer ID 
+                            customerID: userCustomerID,
 
-    }
-        
+                            /// leaves Loan ID blank for the Db to auto incriment
+                            loanID: nil,
+                            /// by now book id has beeen checked as safe
+                            bookID: userBookID,
 
+                            /// uses dategrabber function to grab the date the book was handed out
+                            dateBorrowed: dateGrabber(), dateReturned: nil)
+                        /// will try to add the information to the loans table 
+                        try newLoan.insert(db)
+                        break
+                    /// if the book ID doesnt exist this code is ran and it goes back to the top of the while loop 
+                    } else{print("no book has the id \(userBookID)")}
+                    /// if the book ID exists but the customer ID doesnt this code is ran 
+                    } else {
+                        print("no customer has ID \(userCustomerID)")
+                    }
+                }
+            /// uses 2 functions, inputchecknumbernoupboundry to get customer ID and BookID
 
-    }
-    print("customer added succesfully")
-    }catch{print("ran into an error : \(error)")}
+            // only triggers when user inputs a 3
+            case 3:
+                let newCustomer = Customer(
+                    // leave ID nil and let DB auto incriment a new ID
+                    id: nil,
+                    /// next three lines all grab customer infomration using string grabber
+                    firstName: stringGrabber(
+                        lowerBound: shortestName, upperBound: longestName, prompt: firstNamePrompt),
+                    lastName: stringGrabber(
+                        lowerBound: shortestName, upperBound: longestName, prompt: lastNamePrompt),
+                    phoneNumber: stringGrabber(
+                        lowerBound: shortestPhoneNumber,
+                        upperBound: longestPhoneNumber, prompt: phoneNumberPrompt))
+                // trys to add in all customer details, because of functions used userinputs are safe by here
+                try newCustomer.insert(db)
+
+            default: print("that was not an option sorry")
+
+            }
+
+        }
+        print("customer added succesfully")
+    } catch { print("ran into an error : \(error)") }
 }
 
+@main
+struct SwiftPlayground {
 
-
-
-    @main
-    struct SwiftPlayground {
-
-        static func main() {
-            let dbPath = "Sources/SwiftPlayground/library.db"
-            /// trying to connect to database, sends an error f its unable
-            guard let dbQueue = try? DatabaseQueue(path: dbPath) else {
-                print("Could not open database.")
-                return
-            }
-            print("Connected to database.")
-
-            print("Welcome to the onslow library main menu")
-
-            /// main menu function, this function prints the main menu and checks the user input is valid
-            let mainMenuOption = inputCheckNumber(
-                prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
-            /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
-            switch mainMenuOption {
-            case 1:
-                // finds a single record based off of primary key
-                findSingle(dbQueue: dbQueue)
-            case 2:
-                // prints an entire table
-                printTable(dbQueue: dbQueue)
-            case 3:
-                print("you have chosen to delete a file")
-            case 4:
-                addCustomer(dbQueue: dbQueue)
-            default:
-                print("please choose one of the above options")
-                
-            }
-
-            //change to input later, placeholder rn
-            /// function to fetch all records from a table and print them
-
-            /// function to search for a specfic record
+    static func main() {
+        let dbPath = "Sources/SwiftPlayground/library.db"
+        /// trying to connect to database, sends an error f its unable
+        guard let dbQueue = try? DatabaseQueue(path: dbPath) else {
+            print("Could not open database.")
+            return
         }
-    }
+        print("Connected to database.")
 
+        print("Welcome to the onslow library main menu")
+
+        /// main menu function, this function prints the main menu and checks the user input is valid
+        let mainMenuOption = inputCheckNumber(
+            prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
+        /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
+        switch mainMenuOption {
+        case 1:
+            // finds a single record based off of primary key
+            findSingle(dbQueue: dbQueue)
+        case 2:
+            // prints an entire table
+            printTable(dbQueue: dbQueue)
+        case 3:
+            print("you have chosen to delete a file")
+        case 4:
+            addCustomer(dbQueue: dbQueue)
+        default:
+            print("please choose one of the above options")
+
+        }
+
+        //change to input later, placeholder rn
+        /// function to fetch all records from a table and print them
+
+        /// function to search for a specfic record
+    }
+}
