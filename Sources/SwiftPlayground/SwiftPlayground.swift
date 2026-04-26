@@ -42,13 +42,25 @@ let shortestPhoneNumber = 4
 //the longhest phone number is 15
 let longestPhoneNumber = 15
 
+// the prompt used when adding a loan to the loan table, this is used in the addrecord function for customer ID
+let customerIdPrompt = ("please input the ID of the customer seeking to take out a loan: ")
+
+//the prompt used in the addrecord function to get the book ID of the desierd loan 
+let bookIdPrompt = ("please input the ID of the book the customer is seeking to loan out:")
+
+//the prompt used when asking the user to input the date of loan
+let dateBorrowedPrompt = ("please input todays date:")
+
 // prompt used when asking for customer first name in addCustomer function 
 let firstNamePrompt = ("what is the customers first name? ")
 // prompt used when asking for customer first name in addCustomer function 
 let lastNamePrompt = ("what is the customers last name? ")
 // prompt used when asking for customer first name in addCustomer function 
 let phoneNumberPrompt = ("what is the customers phone number? ")
-/// this struct is the framework for a book with all information that is needed for a loan
+
+
+
+/// this struct is the framework for a book with all information that is needed to create a new book 
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
@@ -83,7 +95,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
         static let id = Column("BookID")
     }
 }
-
+/// this Struct contains the blueprint and coding keys to creeate a new Customer
 struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
     CustomStringConvertible
 {
@@ -133,7 +145,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
     /// date book was borrowed
     let dateBorrowed: String
     /// date book was returned
-    let dateReturned: String
+    let dateReturned: String?
 
     /// description of customer
     var description: String {
@@ -304,7 +316,7 @@ func findSingle(dbQueue: DatabaseQueue) {
 
 }
 
-/// 
+/// String grabber, function that safely unwraps a string and checks if it meets requerments of length 
 /// - Parameters:
 ///   - lowerBound: the lowest length the string the function is grabbing can be
 ///   - upperBound: the longest the string the function is grabbing can be
@@ -315,31 +327,71 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String{
     while true{
         if let userInputString = readLine(){
             let stringLength = userInputString.count
+            // checks if upperbound == 0, this is the number i use for no upper bound
+            if upperBound == 0 && stringLength >= lowerBound{
+                // if upperbound is 0 and input is longer than lower bound it returns the value
+                return userInputString}
+            // if upperbound is not 0 it runs the normal check if it is between boundries
+                else{
                 if stringLength >= lowerBound && stringLength <= upperBound{
-                    return userInputString
-                } else{ print("please ensure your input is longer than \(lowerBound) and shorter than \(upperBound)")}
+                return userInputString}
+                else{ print("please ensure your input is longer than \(lowerBound) and shorter than \(upperBound)")}
+                }  
+                    
     }else{print("please ensure your input contains only letters and no numbers ")}
     }
+}
+/// date grabber grabs the days date of when ever the user is taking out a book 
+/// - Returns: date in dd-mm-yyyy format
+func dateGrabber() -> String{
+    let formatter = DateFormatter()
+    formatter.dateFormat = "dd-MM-yyyy"
+    let dateNow = Date()
+    let dateFormatted = formatter.string(from: dateNow)
+    return dateFormatted
 }
 /// adds a singular customer to the database
 /// - Parameter dbQueue: 
 func addCustomer(dbQueue: DatabaseQueue){
+    print(" you have chosen to add a record to a table, your options are:")
+    let tableNumber = inputCheckNumber(prompt: availableTables, 
+    lowerBound: tablesLowerBound, upperBound: tablesUpbound)
     do{
     try dbQueue.write{ db in 
-    let newCustomer = Customer(
+    switch tableNumber{
+            // only trriggers when user inputs a 1 
+        case 1: let newLoan = Loan( 
+        /// uses 2 functions, inputchecknumbernoupboundry to get customer ID and Bookid
+        customerID: inputCheckNumberNoUpBoundry(prompt: customerIdPrompt, lowerBound: IDsLowerBound), 
+        /// leavs Loan ID blank for the Db to auto incriment 
+        loanID: nil, 
+        bookID: inputCheckNumberNoUpBoundry(prompt: bookIdPrompt, lowerBound: IDsLowerBound), 
+        /// uses dategrabber function to grab the date the book was handed out
+        dateBorrowed: dateGrabber(), dateReturned: nil) 
+        try newLoan.insert(db)
+        // only triggers when user inputs a 3 
+        case 3:let newCustomer = Customer(
+            // leave ID nil and let DB auto incriment a new ID
             id: nil,
+            /// next three lines all grab customer infomration using string grabber 
             firstName: stringGrabber(lowerBound: shortestName , upperBound: longestName,prompt: firstNamePrompt),
             lastName: stringGrabber(lowerBound: shortestName , upperBound: longestName,prompt: lastNamePrompt),
             phoneNumber: stringGrabber(lowerBound: shortestPhoneNumber,
-            upperBound: longestPhoneNumber, prompt: phoneNumberPrompt)
-    )
-    ///trys to input the new customer throws an error if fails 
-    try newCustomer.insert(db)
+            upperBound: longestPhoneNumber, prompt: phoneNumberPrompt))
+            // trys to add in all customer details, because of functions used userinputs are safe by here
+            try newCustomer.insert(db)
+
+        default: print("that was not an option sorry")
+
+    }
+        
+
 
     }
     print("customer added succesfully")
     }catch{print("ran into an error : \(error)")}
 }
+
 
 
 
