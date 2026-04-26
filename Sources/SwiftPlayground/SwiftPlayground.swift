@@ -349,8 +349,6 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
     }
 }
 
-
-
 /// date grabber grabs the days date of when ever the user is taking out a book
 /// - Returns: date in dd-mm-yyyy format
 func dateGrabber() -> String {
@@ -361,32 +359,41 @@ func dateGrabber() -> String {
     return dateFormatted
 }
 
-
-/// 
+///
 /// - Parameter
 ///   - checkId: the ID thats saftey needs to be checked
+///   - dbQueue: paassing a connection to the databse to the function
+///   - tableName: the name of the table the ID being checked is linked to 
 
-/// - Returns: 
-func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableChecked: String) -> Bool{
+/// - Returns: true or false, true if the ID exists and false if it doesnt
+func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Bool {
+    var saftey = false
     do {
-        try dbQueue.read{db in switch tableChecked {
-
-            case "Customer": if (try Customer.fetchOne(db, key: checkId)) != nil{
-                return true
-            } else{ return false}
-            case "Books": if((try Books.fetchOne(db, key:checkId)) != nil){
-                return true
-            }else{
-                return false
+        try dbQueue.read { db in
+            switch tableName {
+            case "Customer":
+                if (try Customer.fetchOne(db, key: checkId)) != nil {
+                    saftey = true
+                } else {
+                    saftey = false
+                }
+            case "Book":
+                if (try Books.fetchOne(db, key: checkId)) != nil {
+                    saftey = true
+                } else {
+                    saftey = false
+                }
+            default: print("not an option!")
             }
-            default: print("error! this is not an option")
-            return false
-}
         }
-    }catch{print(error)}
+        return saftey
+    } catch { print(error) }
+    /// this line is triggerd if the condition doe not fall under the cases above
     return false
+}
+
 /// adds a singular customer to the database
-/// - Parameter dbQueue: passes the connection to the database to the function 
+/// - Parameter dbQueue: passes the connection to the database to the function
 func addCustomer(dbQueue: DatabaseQueue) {
     print(" you have chosen to add a record to a table, your options are:")
     let tableNumber = inputCheckNumber(
@@ -397,21 +404,19 @@ func addCustomer(dbQueue: DatabaseQueue) {
             switch tableNumber {
             // only trriggers when user inputs a 1
             case 1:
-       /// only once we know the book and customer exists does the code create the record
                 let newLoan = Loan(
-                /// using the checked customer ID 
-                customerID:  inputCheckNumberNoUpBoundry(
-                prompt: customerIdPrompt, lowerBound: IDsLowerBound),
+                    /// using the checked customer ID
+                    customerID: inputCheckNumberNoUpBoundry(
+                        prompt: customerIdPrompt, lowerBound: IDsLowerBound),
 
-                /// leaves Loan ID blank for the Db to auto incriment
-                loanID: nil,
-                /// by now book id has beeen checked as safe
-                bookID: inputCheckNumberNoUpBoundry(
-                prompt: bookIdPrompt, lowerBound: IDsLowerBound),
+                    /// leaves Loan ID blank for the Db to auto incriment
+                    loanID: nil,
+                    bookID: inputCheckNumberNoUpBoundry(
+                        prompt: bookIdPrompt, lowerBound: IDsLowerBound),
 
-                /// uses dategrabber function to grab the date the book was handed out
-                dateBorrowed: dateGrabber(), dateReturned: nil)
-                /// will try to add the information to the loans table 
+                    /// uses dategrabber function to grab the date the book was handed out
+                    dateBorrowed: dateGrabber(), dateReturned: nil)
+                /// will try to add the information to the loans table
                 try newLoan.insert(db)
             // only triggers when user inputs a 3
             case 3:
