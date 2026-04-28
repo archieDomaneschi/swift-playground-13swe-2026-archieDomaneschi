@@ -22,10 +22,10 @@ let mainMessage =
     """)
 // used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
 let oldestDateOfPublication = 1
-// used when asking for the publication date assuming no book has been published in a year with 5 numbers 
-let newestPublication = 4 
+// used when asking for the publication date assuming no book has been published in a year with 5 numbers
+let newestPublication = 4
 
-// shortest title length, used in the addFile function in case 2 
+// shortest title length, used in the addFile function in case 2
 let shortestTitle = 2
 
 // longest possible title length used in addfile function in case 2
@@ -34,7 +34,7 @@ let longestTitle = 255
 //used in the addRFile function in case 2 to get the title of a book eing added
 let bookTitlePrompt = ("please Input the title of the book the book you wish to add:")
 
-// used in the addFile function in case 2 to get the authors name 
+// used in the addFile function in case 2 to get the authors name
 let bookAuthorPrompt = ("please enter the the author of the book you desire to add?")
 
 /// used in addFile function to get the year of publication for a book, used in case 2
@@ -248,6 +248,7 @@ func inputCheckNumberNoUpBoundry(prompt: String, lowerBound: Int, ) -> Int {
         }
     }
 }
+
 /// prints out an entire table when the user selctes print table form the main menu currently
 /// - Parameters:
 ///   - dbQueue: to start a connection with the database
@@ -379,7 +380,7 @@ func dateGrabber() -> String {
     return dateFormatted
 }
 
-///
+/// checkIdsaftey checks an Id and returns said id when it is safe
 /// - Parameter
 ///   - checkId: the ID thats saftey needs to be checked
 ///   - dbQueue: paassing a connection to the databse to the function
@@ -387,29 +388,33 @@ func dateGrabber() -> String {
 
 /// - Returns: true or false, true if the ID exists and false if it doesnt
 func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Bool {
+    var currentId = checkId
     var saftey = false
-    do {
-        try dbQueue.read { db in
-            switch tableName {
-            case "Customer":
-                if (try Customer.fetchOne(db, key: checkId)) != nil {
-                    saftey = true
-                } else {
-                    saftey = false
+    while saftey == false {
+        do {
+            try dbQueue.read { db in
+                switch tableName {
+                case "Customer":
+                    if (try Customer.fetchOne(db, key: checkId)) != nil {
+                        saftey = true
+                    } else {
+                        saftey = false
+                        currentId = inputCheckNumberNoUpBoundry(prompt: customerIdPrompt, lowerBound: IDsLowerBound)
+                    }
+                case "Book":
+                    if (try Books.fetchOne(db, key: checkId)) != nil {
+                        saftey = true
+                    } else {
+                        saftey = false
+                    }
+                default: print("not an option!")
                 }
-            case "Book":
-                if (try Books.fetchOne(db, key: checkId)) != nil {
-                    saftey = true
-                } else {
-                    saftey = false
-                }
-            default: print("not an option!")
             }
-        }
-        return saftey
-    } catch { print(error) }
-    /// this line is triggerd if the condition doe not fall under the cases above
-    return false
+            return saftey
+        } catch { print(error) }
+        /// this line is triggerd if the condition doe not fall under the cases above
+        return false
+    }
 }
 
 /// adds a singular customer to the database
@@ -427,7 +432,7 @@ func addCustomer(dbQueue: DatabaseQueue) {
                 let newLoan = Loan(
                     /// using the checked customer ID
                     customerID: inputCheckNumberNoUpBoundry(
-                        prompt:customerIdPrompt , lowerBound: IDsLowerBound),
+                        prompt: customerIdPrompt, lowerBound: IDsLowerBound),
 
                     /// leaves Loan ID blancustomerIdPromptk for the Db to auto incriment
                     loanID: nil,
@@ -438,19 +443,20 @@ func addCustomer(dbQueue: DatabaseQueue) {
                     dateBorrowed: dateGrabber(), dateReturned: nil)
                 /// will try to add the information to the loans table
                 try newLoan.insert(db)
-            
-            case 2: let newBook = Books(
-                id: nil, 
-                title: stringGrabber(lowerBound: shortestTitle, upperBound: longestTitle
-                , prompt: bookTitlePrompt), 
-                author: stringGrabber(lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt), 
-                year: stringGrabber(lowerBound: oldestDateOfPublication, upperBound: newestPublication, 
-                prompt: yearOfPublicationPrompt))
+
+            case 2:
+                let newBook = Books(
+                    id: nil,
+                    title: stringGrabber(
+                        lowerBound: shortestTitle, upperBound: longestTitle, prompt: bookTitlePrompt
+                    ),
+                    author: stringGrabber(
+                        lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt),
+                    year: stringGrabber(
+                        lowerBound: oldestDateOfPublication, upperBound: newestPublication,
+                        prompt: yearOfPublicationPrompt))
                 // trys to safely insert all information into the tables
                 try newBook.insert(db)
-
-
-
 
             // only triggers when user inputs a 3
             case 3:
