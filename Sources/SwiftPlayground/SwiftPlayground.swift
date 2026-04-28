@@ -20,8 +20,6 @@ let mainMessage =
     5: to quit
 
     """)
-
-let LoanIdPrompt = ("please enter the ID of the loan you wish to delete")
 // used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
 let oldestDateOfPublication = 1
 // used when asking for the publication date assuming no book has been published in a year with 5 numbers
@@ -389,52 +387,33 @@ func dateGrabber() -> String {
 ///   - tableName: the name of the table the ID being checked is linked to
 
 /// - Returns: true or false, true if the ID exists and false if it doesnt
-func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Int {
+func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Bool {
     var currentId = checkId
-    while true {
+    var saftey = false
+    while saftey == false {
         do {
             try dbQueue.read { db in
                 switch tableName {
-                // when the name passed in is customer it checks the customer table and will ask you to input a new id 
                 case "Customer":
-                // trys to fetch a customer from the db using the given ID if the result is nil it is safely handeled 
-                //and the user is prompted to try again 
-            
-                    if (try Customer.fetchOne(db, key: currentId)) != nil {
-                        // if the userinput doesnt have a nill result currentId is returned to where it was calledfrom
-
-                        return 
+                    if (try Customer.fetchOne(db, key: checkId)) != nil {
+                        saftey = true
                     } else {
-                        // safely handling any nil results 
-                        print("please ensure the ID you choose exists")
+                        saftey = false
                         currentId = inputCheckNumberNoUpBoundry(prompt: customerIdPrompt, lowerBound: IDsLowerBound)
                     }
-                
                 case "Book":
-
-                    if (try Books.fetchOne(db, key: currentId)) != nil {
-                        return
+                    if (try Books.fetchOne(db, key: checkId)) != nil {
+                        saftey = true
                     } else {
-                        print("please ensure the ID you choose exists")
-                        currentId = inputCheckNumberNoUpBoundry(prompt: bookIdPrompt, lowerBound: IDsLowerBound)
-                    }
-                case "Loan":
-
-                    if (try Loan.fetchOne(db, key: currentId)) != nil {
-                        return
-                    } else {
-                        print("please ensure the ID you choose exists")
-                        currentId = inputCheckNumberNoUpBoundry(prompt: LoanIdPrompt, lowerBound: IDsLowerBound)
+                        saftey = false
                     }
                 default: print("not an option!")
-                return
                 }
             }
-            return currentId
-            
+            return saftey
         } catch { print(error) }
         /// this line is triggerd if the condition doe not fall under the cases above
-
+        return false
     }
 }
 
@@ -452,8 +431,8 @@ func addCustomer(dbQueue: DatabaseQueue) {
             case 1:
                 let newLoan = Loan(
                     /// using the checked customer ID
-                    customerID: checkIdSaftey(checkId: inputCheckNumberNoUpBoundry(
-                        prompt: customerIdPrompt, lowerBound: IDsLowerBound), dbQueue: dbQueue, tableName: "Customer"),
+                    customerID: inputCheckNumberNoUpBoundry(
+                        prompt: customerIdPrompt, lowerBound: IDsLowerBound),
 
                     /// leaves Loan ID blancustomerIdPromptk for the Db to auto incriment
                     loanID: nil,
