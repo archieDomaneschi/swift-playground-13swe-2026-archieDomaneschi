@@ -387,33 +387,35 @@ func dateGrabber() -> String {
 ///   - tableName: the name of the table the ID being checked is linked to
 
 /// - Returns: true or false, true if the ID exists and false if it doesnt
-func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Bool {
+func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Int {
     var currentId = checkId
-    var saftey = false
-    while saftey == false {
+    while true {
         do {
             try dbQueue.read { db in
                 switch tableName {
                 case "Customer":
                     if (try Customer.fetchOne(db, key: checkId)) != nil {
-                        saftey = true
+                        return currentId
                     } else {
-                        saftey = false
+                        print("please ensure the ID you choose exists")
                         currentId = inputCheckNumberNoUpBoundry(prompt: customerIdPrompt, lowerBound: IDsLowerBound)
                     }
                 case "Book":
                     if (try Books.fetchOne(db, key: checkId)) != nil {
-                        saftey = true
+                        return currentId
                     } else {
-                        saftey = false
+                        print("please ensure the ID you choose exists")
+                        currentId = inputCheckNumberNoUpBoundry(prompt: bookIdPrompt, lowerBound: IDsLowerBound)
                     }
                 default: print("not an option!")
+                return
                 }
             }
-            return saftey
+            return currentId
+            
         } catch { print(error) }
         /// this line is triggerd if the condition doe not fall under the cases above
-        return false
+
     }
 }
 
