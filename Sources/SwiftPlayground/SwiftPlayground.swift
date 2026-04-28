@@ -8,7 +8,7 @@ let tables = ["Loan", "Books", "Customer"]
 // used to compare user input to limiatations in main menu
 let mainMenuLowerBound = 1
 // used to compare the user input in the main menu to the upper bound
-let mainMenuupperBound = 4
+let mainMenuupperBound = 5
 // main menu message that is printed anytime the user naviates to the main menu
 let mainMessage =
     ("""
@@ -17,8 +17,28 @@ let mainMessage =
     2: print an entire table? 
     3: delete a file? 
     4: add a file? 
+    5: to quit
 
     """)
+// used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
+let oldestDateOfPublication = 1
+// used when asking for the publication date assuming no book has been published in a year with 5 numbers 
+let newestPublication = 4 
+
+// shortest title length, used in the addFile function in case 2 
+let shortestTitle = 2
+
+// longest possible title length used in addfile function in case 2
+let longestTitle = 255
+
+//used in the addRFile function in case 2 to get the title of a book eing added
+let bookTitlePrompt = ("please Input the title of the book the book you wish to add:")
+
+// used in the addFile function in case 2 to get the authors name 
+let bookAuthorPrompt = ("please enter the the author of the book you desire to add?")
+
+/// used in addFile function to get the year of publication for a book, used in case 2
+let yearOfPublicationPrompt = ("what year was the book you wish to add published?")
 
 // currently avaialble tables
 let availableTables = "1. Loans 2. Books 3. Customers"
@@ -363,7 +383,7 @@ func dateGrabber() -> String {
 /// - Parameter
 ///   - checkId: the ID thats saftey needs to be checked
 ///   - dbQueue: paassing a connection to the databse to the function
-///   - tableName: the name of the table the ID being checked is linked to 
+///   - tableName: the name of the table the ID being checked is linked to
 
 /// - Returns: true or false, true if the ID exists and false if it doesnt
 func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Bool {
@@ -407,9 +427,9 @@ func addCustomer(dbQueue: DatabaseQueue) {
                 let newLoan = Loan(
                     /// using the checked customer ID
                     customerID: inputCheckNumberNoUpBoundry(
-                        prompt: customerIdPrompt, lowerBound: IDsLowerBound),
+                        prompt:customerIdPrompt , lowerBound: IDsLowerBound),
 
-                    /// leaves Loan ID blank for the Db to auto incriment
+                    /// leaves Loan ID blancustomerIdPromptk for the Db to auto incriment
                     loanID: nil,
                     bookID: inputCheckNumberNoUpBoundry(
                         prompt: bookIdPrompt, lowerBound: IDsLowerBound),
@@ -418,6 +438,20 @@ func addCustomer(dbQueue: DatabaseQueue) {
                     dateBorrowed: dateGrabber(), dateReturned: nil)
                 /// will try to add the information to the loans table
                 try newLoan.insert(db)
+            
+            case 2: let newBook = Books(
+                id: nil, 
+                title: stringGrabber(lowerBound: shortestTitle, upperBound: longestTitle
+                , prompt: bookTitlePrompt), 
+                author: stringGrabber(lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt), 
+                year: stringGrabber(lowerBound: oldestDateOfPublication, upperBound: newestPublication, 
+                prompt: yearOfPublicationPrompt))
+                // trys to safely insert all information into the tables
+                try newBook.insert(db)
+
+
+
+
             // only triggers when user inputs a 3
             case 3:
                 let newCustomer = Customer(
@@ -447,6 +481,7 @@ func addCustomer(dbQueue: DatabaseQueue) {
 struct SwiftPlayground {
 
     static func main() {
+        var systemRunning = true
         let dbPath = "Sources/SwiftPlayground/library.db"
         /// trying to connect to database, sends an error f its unable
         guard let dbQueue = try? DatabaseQueue(path: dbPath) else {
@@ -456,30 +491,36 @@ struct SwiftPlayground {
         print("Connected to database.")
 
         print("Welcome to the onslow library main menu")
+        while systemRunning == true {
 
-        /// main menu function, this function prints the main menu and checks the user input is valid
-        let mainMenuOption = inputCheckNumber(
-            prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
-        /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
-        switch mainMenuOption {
-        case 1:
-            // finds a single record based off of primary key
-            findSingle(dbQueue: dbQueue)
-        case 2:
-            // prints an entire table
-            printTable(dbQueue: dbQueue)
-        case 3:
-            print("you have chosen to delete a file")
-        case 4:
-            addCustomer(dbQueue: dbQueue)
-        default:
-            print("please choose one of the above options")
+            /// main menu function, this function prints the main menu and checks the user input is valid
+            let mainMenuOption = inputCheckNumber(
+                prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
+            /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
+            switch mainMenuOption {
+            case 1:
+                // finds a single record based off of primary key
+                findSingle(dbQueue: dbQueue)
+            case 2:
+                // prints an entire table
+                printTable(dbQueue: dbQueue)
+            case 3:
+                print("you have chosen to delete a file")
+            case 4:
+                addCustomer(dbQueue: dbQueue)
+            case 5:
+                print("Goodbye!")
+                systemRunning = false
 
+            default:
+                print("please choose one of the above options")
+
+            }
+
+            //change to input later, placeholder rn
+            /// function to fetch all records from a table and print them
+
+            /// function to search for a specfic record
         }
-
-        //change to input later, placeholder rn
-        /// function to fetch all records from a table and print them
-
-        /// function to search for a specfic record
     }
 }
