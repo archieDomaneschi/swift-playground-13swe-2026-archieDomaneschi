@@ -380,43 +380,6 @@ func dateGrabber() -> String {
     return dateFormatted
 }
 
-/// checkIdsaftey checks an Id and returns said id when it is safe
-/// - Parameter
-///   - checkId: the ID thats saftey needs to be checked
-///   - dbQueue: paassing a connection to the databse to the function
-///   - tableName: the name of the table the ID being checked is linked to
-
-/// - Returns: true or false, true if the ID exists and false if it doesnt
-func checkIdSaftey(checkId: Int, dbQueue: DatabaseQueue, tableName: String) -> Bool {
-    var currentId = checkId
-    var saftey = false
-    while saftey == false {
-        do {
-            try dbQueue.read { db in
-                switch tableName {
-                case "Customer":
-                    if (try Customer.fetchOne(db, key: checkId)) != nil {
-                        saftey = true
-                    } else {
-                        saftey = false
-                        currentId = inputCheckNumberNoUpBoundry(prompt: customerIdPrompt, lowerBound: IDsLowerBound)
-                    }
-                case "Book":
-                    if (try Books.fetchOne(db, key: checkId)) != nil {
-                        saftey = true
-                    } else {
-                        saftey = false
-                    }
-                default: print("not an option!")
-                }
-            }
-            return saftey
-        } catch { print(error) }
-        /// this line is triggerd if the condition doe not fall under the cases above
-        return false
-    }
-}
-
 /// adds a singular customer to the database
 /// - Parameter dbQueue: passes the connection to the database to the function
 func addCustomer(dbQueue: DatabaseQueue) {
@@ -480,7 +443,8 @@ func addCustomer(dbQueue: DatabaseQueue) {
 
         }
         print("customer added succesfully")
-    } catch { print("ran into an error : \(error)") }
+    } catch {print("please ensure any information you add is valid and exists")
+        print("ran into an error : \(error)") }
 }
 
 @main
