@@ -20,6 +20,11 @@ let mainMessage =
     5: to quit
 
     """)
+// user is prompted this when they have finished a task.
+let continuePrompt = ("press enter when you wnat to continue")
+
+
+
 // used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
 let oldestDateOfPublication = 1
 // used when asking for the publication date assuming no book has been published in a year with 5 numbers
@@ -486,6 +491,11 @@ struct SwiftPlayground {
                 print("please choose one of the above options")
 
             }
+            
+
+ 
+ 
+            
 
             //change to input later, placeholder rn
             /// function to fetch all records from a table and print them
