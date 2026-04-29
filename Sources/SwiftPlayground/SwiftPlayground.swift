@@ -23,8 +23,6 @@ let mainMessage =
 // user is prompted this when they have finished a task.
 let continuePrompt = ("press enter when you wnat to continue")
 
-
-
 // used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
 let oldestDateOfPublication = 1
 // used when asking for the publication date assuming no book has been published in a year with 5 numbers
@@ -78,10 +76,21 @@ let dateBorrowedPrompt = ("please input todays date:")
 
 // prompt used when asking for customer first name in addCustomer function
 let firstNamePrompt = ("what is the customers first name? ")
+
 // prompt used when asking for customer first name in addCustomer function
 let lastNamePrompt = ("what is the customers last name? ")
+
 // prompt used when asking for customer first name in addCustomer function
 let phoneNumberPrompt = ("what is the customers phone number? ")
+
+// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func 
+let deletePromptCustomer = ("please insert the Customer ID of the record you want to delete ")
+
+// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
+let deletePromptBook = ("please inste the Book ID of the record you want to delete")
+
+// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
+let deletePromptLoan = ("please insert the Loan ID of the record you want to delete")
 
 /// this struct is the framework for a book with all information that is needed to create a new book
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
@@ -385,9 +394,10 @@ func dateGrabber() -> String {
     return dateFormatted
 }
 
-/// adds a singular customer to the database
+/// adds a singular record to the database
 /// - Parameter dbQueue: passes the connection to the database to the function
-func addCustomer(dbQueue: DatabaseQueue) {
+func addRecord(dbQueue: DatabaseQueue) {
+    system("clear")
     print(" you have chosen to add a record to a table, your options are:")
     let tableNumber = inputCheckNumber(
         prompt: availableTables,
@@ -447,9 +457,32 @@ func addCustomer(dbQueue: DatabaseQueue) {
             }
 
         }
-        print("customer added succesfully")
-    } catch {print("please ensure any information you add is valid and exists")
-        print("ran into an error : \(error)") }
+        print("record added succesfully")
+    } catch {
+        print("please ensure any information you add is valid and exists")
+        print("ran into an error : \(error)")
+    }
+}
+
+func deleteRecord(dbQueue: DatabaseQueue){
+    print(" you have chosen to delete a record from a table, your options are:")
+    let tableNumber = inputCheckNumber(
+        prompt: availableTables,
+        lowerBound: tablesLowerBound, upperBound: tablesUpbound)
+    do{
+        try dbQueue.write{db in switch 
+        tableNumber{
+            case 1: let idToDelete = inputCheckNumberNoUpBoundry(prompt: deletePromptLoan, 
+            lowerBound: IDsLowerBound) 
+            case 2:
+            case 3:
+            default: print("that is not an option")
+        }}
+        
+    }catch{
+        print("please ensure the record you are trying to delete exists")
+        print(error)}
+
 }
 
 @main
@@ -467,7 +500,9 @@ struct SwiftPlayground {
 
         print("Welcome to the onslow library main menu")
         while systemRunning == true {
-
+            // needs to be made false every time the code is ran through, put here so when the user quits it can be-
+            //set to true and skip the last message
+            var userContinueBool: Bool = false
             /// main menu function, this function prints the main menu and checks the user input is valid
             let mainMenuOption = inputCheckNumber(
                 prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
@@ -482,25 +517,37 @@ struct SwiftPlayground {
             case 3:
                 print("you have chosen to delete a file")
             case 4:
-                addCustomer(dbQueue: dbQueue)
+                addRecord(dbQueue: dbQueue)
             case 5:
                 print("Goodbye!")
                 systemRunning = false
+                userContinueBool = true
 
             default:
                 print("please choose one of the above options")
 
             }
+
             
+            while userContinueBool == false {
+                print("press enter to continue")
+                let userContinue = readLine()
+                if userContinue == "" {
+                    userContinueBool = true
+                    system("clear")
 
- 
- 
+                } else {
+                    print("please only press enter")
+
+                }
+
+            }
             
-
-            //change to input later, placeholder rn
-            /// function to fetch all records from a table and print them
-
-            /// function to search for a specfic record
         }
+
+        //change to input later, placeholder rn
+        /// function to fetch all records from a table and print them
+
+        /// function to search for a specfic record
     }
 }
