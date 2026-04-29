@@ -440,30 +440,31 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
     }
 }
 
-
 /// stringgrabbernamechange, i had to make this becasue if i added in the -
 ///  = 0 statement in previous string grabber it would have broken other inputs
 /// - Parameters:
 ///   - lowerBound: the longest a name can be
 ///   - upperBound: the longest a name can be
 ///   - prompt: what the user is asked to respond to
-/// - Returns: a String only if the string is either empty or within requierments 
+/// - Returns: a String only if the string is either empty or within requierments
 func stringGrabberNameChange(lowerBound: Int, upperBound: Int, prompt: String) -> String {
 
     print(prompt)
     while true {
         if let userInputString = readLine() {
             let stringLength = userInputString.count
-            if stringLength == 0{
+            if stringLength == 0 {
                 return userInputString
-            }else{
+            } else {
                 if stringLength >= lowerBound && stringLength <= upperBound {
                     return userInputString
                 } else {
-                    print("""
-                    please ensure your input is longer than \(lowerBound) and shorter than \(upperBound) 
-                    or left blank if you wish to make no change
-                    """)
+                    print(
+                        """
+                        please ensure your input is longer than \(lowerBound) and shorter than \(upperBound) 
+                        or left blank if you wish to make no change
+                        """)
+                }
             }
         }
     }
@@ -560,8 +561,8 @@ func addRecord(dbQueue: DatabaseQueue) {
     }
 }
 
-/// 
-/// - Parameter dbQueue: 
+///
+/// - Parameter dbQueue:
 func processLoanReturn(dbQueue: DatabaseQueue) {
     print("you have chosen to return a book")
     let loanToReturnId = inputCheckNumberNoUpBoundry(
@@ -587,8 +588,8 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
         }
     } catch { print(error) }
 }
-/// 
-/// - Parameter dbQueue: 
+///
+/// - Parameter dbQueue:
 func editCustomer(dbQueue: DatabaseQueue) {
     let customerChange = inputCheckNumberNoUpBoundry(
         prompt: customerChangePrompt, lowerBound: IDsLowerBound)
@@ -712,9 +713,5 @@ struct SwiftPlayground {
 
         }
 
-        //change to input later, placeholder rn
-        /// function to fetch all records from a table and print them
-
-        /// function to search for a specfic record
     }
 }
