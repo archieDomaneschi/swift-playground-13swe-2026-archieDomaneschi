@@ -522,8 +522,7 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
                 loan.status = statusReturn
                 loan.dateReturned = dateGrabber()
                 try loan.update(db)
-                if loan.dateReturned != nil {
-
+                if loan.status == statusLoan {
                     //update the amount of books using bookID linked to loan
                     if var book = try Books.fetchOne(db, key: loan.bookID) {
                         book.amount += 1
