@@ -8,7 +8,7 @@ let tables = ["Loan", "Books", "Customer"]
 // used to compare user input to limiatations in main menu
 let mainMenuLowerBound = 1
 // used to compare the user input in the main menu to the upper bound
-let mainMenuupperBound = 5
+let mainMenuupperBound = 6
 // main menu message that is printed anytime the user naviates to the main menu
 let mainMessage =
     ("""
@@ -313,10 +313,21 @@ func printTable(dbQueue: DatabaseQueue) {
                 }
             /// if the user selets 2 is prints the books table
             case 2:
+                var unAvailability:[String] = []
+                var available:[String] = []
                 let results = try Books.fetchAll(db)
-                /// cycles through the results suing the description message
+                /// cycles through the results adding to unavailable if amount of books = 0 
                 for result in results {
-                    print(result.description)
+                    if result.amount == 0{
+                    unAvailability.append(result.description)
+                    }
+                else{available.append(result.description)}
+                }
+                for available in available{
+                    print("IN STOCK || \(available.description)")
+                }
+                for unAvailable in unAvailability{
+                    print("OUT OF STOCK || \(unAvailable.description) ")    
                 }
             /// if the user selctes table 3 loans is printed
             case 3:
