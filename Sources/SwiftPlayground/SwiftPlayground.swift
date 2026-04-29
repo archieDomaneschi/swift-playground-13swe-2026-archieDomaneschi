@@ -165,7 +165,7 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     }
 }
 
-struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, PersistableRecord {
+struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, PersistableRecord, MutablePersistableRecord {
     /// an id given to any customer added,
     let customerID: Int
 
@@ -472,10 +472,15 @@ func deleteRecord(dbQueue: DatabaseQueue){
     do{
         try dbQueue.write{db in switch 
         tableNumber{
-            case 1: let idToDelete = inputCheckNumberNoUpBoundry(prompt: deletePromptLoan, 
-            lowerBound: IDsLowerBound) 
-            case 2:
-            case 3:
+            case 1: 
+                let idToDelete = inputCheckNumberNoUpBoundry(prompt: deletePromptLoan, 
+                lowerBound: IDsLowerBound) 
+                if let recordToDelete = try Loan.fetchOne(db, key: idToDelete){
+                    try Loan.delete(db, key: recordToDelete)
+                }
+            
+            case 2: print("silence")
+            case 3: print("silecne ")
             default: print("that is not an option")
         }}
         
