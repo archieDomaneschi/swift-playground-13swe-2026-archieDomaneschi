@@ -126,7 +126,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 
     var description: String {
         // see testing table for source of default and the solution i used
-        "book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
+"book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -313,22 +313,21 @@ func printTable(dbQueue: DatabaseQueue) {
                 }
             /// if the user selets 2 is prints the books table
             case 2:
-                var unAvailability: [String] = []
-                var available: [String] = []
+                var unAvailability:[String] = []
+                var available:[String] = []
                 let results = try Books.fetchAll(db)
-                /// cycles through the results adding to unavailable if amount of books = 0
+                /// cycles through the results adding to unavailable if amount of books = 0 
                 for result in results {
-                    if result.amount == 0 {
-                        unAvailability.append(result.description)
-                    } else {
-                        available.append(result.description)
+                    if result.amount == 0{
+                    unAvailability.append(result.description)
                     }
+                else{available.append(result.description)}
                 }
-                for available in available {
+                for available in available{
                     print("IN STOCK || \(available.description)")
                 }
-                for unAvailable in unAvailability {
-                    print("OUT OF STOCK || \(unAvailable.description) ")
+                for unAvailable in unAvailability{
+                    print("OUT OF STOCK || \(unAvailable.description) ")    
                 }
             /// if the user selctes table 3 loans is printed
             case 3:
@@ -460,12 +459,10 @@ func addRecord(dbQueue: DatabaseQueue) {
                 if var book = try Books.fetchOne(db, key: newLoan.bookID) {
                     book.amount -= 1
                     try book.update(db)
-                    try newLoan.insert(db)
-                } else {
-                    print("this book does not exist")
-                }
-
-            /// will try to add the information to the loans table
+                    try newLoan.insert(db)}else{print("this book does not exist")}
+                
+                /// will try to add the information to the loans table
+    
 
             case 2:
                 let newBook = Books(
@@ -522,15 +519,13 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
                 loan.status = statusReturn
                 loan.dateReturned = dateGrabber()
                 try loan.update(db)
-                if loan.status == statusLoan {
-                    //update the amount of books using bookID linked to loan
-                    if var book = try Books.fetchOne(db, key: loan.bookID) {
-                        book.amount += 1
-                        try book.update(db)
-                    }
-                }else{print("that loan has already been returned")}
+                //update the amount of books using bookID linked to loan
+                if var book = try Books.fetchOne(db, key: loan.bookID) {
+                    book.amount += 1
+                    try book.update(db)
+                }
             } else {
-                print("this ID does not exist")
+                print("please check the ID you input exists and a return hasnt already been processed for this loan")
 
             }
 
