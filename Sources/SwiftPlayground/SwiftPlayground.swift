@@ -8,7 +8,7 @@ let tables = ["Loan", "Books", "Customer"]
 // used to compare user input to limiatations in main menu
 let mainMenuLowerBound = 1
 // used to compare the user input in the main menu to the upper bound
-let mainMenuupperBound = 6
+let mainMenuUpperBound = 7
 // main menu message that is printed anytime the user naviates to the main menu
 let mainMessage =
     ("""
@@ -18,10 +18,27 @@ let mainMessage =
     3: delete a file? 
     4: add a file? 
     5: process a return
-    6: to quit
+    6: edit a customers record
+    7: to quit
 
     """)
 
+//used in editCustomer function to ask what the name they would like to change the name to
+let customerFirstNameChangePrompt =
+    ("please enter the name you would like the selcted custommers name changed to, or leave blank to leave unchanged")
+
+//used in editCustomer function to ask what the name they would like to change the name to
+let customerLastNameChangePrompt =
+    ("please enter the last name you would like the selcted custommers name changed to, or leave blank to leave unchanged")
+
+////used in editCustomer function to ask what phonenumber they would like to change the number to
+let customerPhoneNumberChangePrompt =
+    ("please enter the last name you would like the selcted custommers name changed to, or leave blank to leave unchanged")
+//
+//used in the editCustomer function to ask the user the customer ID they are altering
+let customerChangePrompt = ("please enter the ID of the customer you are attempting to alter")
+
+//used in the processReturn func
 let loanReturnPrompt = ("please enter the ID of the loan being returned")
 
 // this is hte prompt used to ask users how many books they are adding in addRecord
@@ -71,11 +88,10 @@ let shortestName = 2
 
 // allowing ample length for any name
 let longestName = 75
-
-// the shortest phone number belongs to Niue at 4
+// the shortest phone number belongs to Niue at 4 used in add customer and editCustomer
 let shortestPhoneNumber = 4
 
-//the longhest phone number is 15
+// longest possible phone number used in addCustomer and Edit customer
 let longestPhoneNumber = 15
 
 // the prompt used when adding a loan to the loan table, this is used in the addrecord function for customer ID
@@ -126,7 +142,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 
     var description: String {
         // see testing table for source of default and the solution i used
-"book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
+        "book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -153,17 +169,17 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     let id: Int?
 
     /// customer name
-    let firstName: String
+    var firstName: String
 
     ///customer last name
 
-    let lastName: String
+    var lastName: String
     /// custoomer phone number
-    let phoneNumber: String
+    var phoneNumber: String
 
     /// description of customer
     var description: String {
-        // *note* used VS code and a google to : "https://surl.lt/mdhdpd"
+        // *note* used VS code and a google to over come optional issues: "https://surl.lt/mdhdpd"
         "ID: \(id, default: "N/A" ) |Name: \(firstName) \(lastName) |Phone Number: \(phoneNumber)"
     }
     /// to conform is Codable
@@ -313,21 +329,22 @@ func printTable(dbQueue: DatabaseQueue) {
                 }
             /// if the user selets 2 is prints the books table
             case 2:
-                var unAvailability:[String] = []
-                var available:[String] = []
+                var unAvailability: [String] = []
+                var available: [String] = []
                 let results = try Books.fetchAll(db)
-                /// cycles through the results adding to unavailable if amount of books = 0 
+                /// cycles through the results adding to unavailable if amount of books = 0
                 for result in results {
-                    if result.amount == 0{
-                    unAvailability.append(result.description)
+                    if result.amount == 0 {
+                        unAvailability.append(result.description)
+                    } else {
+                        available.append(result.description)
                     }
-                else{available.append(result.description)}
                 }
-                for available in available{
+                for available in available {
                     print("IN STOCK || \(available.description)")
                 }
-                for unAvailable in unAvailability{
-                    print("OUT OF STOCK || \(unAvailable.description) ")    
+                for unAvailable in unAvailability {
+                    print("OUT OF STOCK || \(unAvailable.description) ")
                 }
             /// if the user selctes table 3 loans is printed
             case 3:
@@ -398,7 +415,10 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
     while true {
         if let userInputString = readLine() {
             let stringLength = userInputString.count
-            // checks if upperbound == 0, this is the number i use for no upper bound
+            if stringLength == 0 && upperBound == 0 {
+                return userInputString
+            }
+            // checks if upperbound == 0, this is the number I use for no upper bound
             if upperBound == 0 && stringLength >= lowerBound {
                 // if upperbound is 0 and input is longer than lower bound it returns the value
                 return userInputString
@@ -416,6 +436,35 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
 
         } else {
             print("please ensure your input contains only letters and no numbers ")
+        }
+    }
+}
+
+
+/// stringgrabbernamechange, i had to make this becasue if i added in the -
+///  = 0 statement in previous string grabber it would have broken other inputs
+/// - Parameters:
+///   - lowerBound: the longest a name can be
+///   - upperBound: the longest a name can be
+///   - prompt: what the user is asked to respond to
+/// - Returns: a String only if the string is either empty or within requierments 
+func stringGrabberNameChange(lowerBound: Int, upperBound: Int, prompt: String) -> String {
+
+    print(prompt)
+    while true {
+        if let userInputString = readLine() {
+            let stringLength = userInputString.count
+            if stringLength == 0{
+                return userInputString
+            }else{
+                if stringLength >= lowerBound && stringLength <= upperBound {
+                    return userInputString
+                } else {
+                    print("""
+                    please ensure your input is longer than \(lowerBound) and shorter than \(upperBound) 
+                    or left blank if you wish to make no change
+                    """)
+            }
         }
     }
 }
@@ -459,10 +508,12 @@ func addRecord(dbQueue: DatabaseQueue) {
                 if var book = try Books.fetchOne(db, key: newLoan.bookID) {
                     book.amount -= 1
                     try book.update(db)
-                    try newLoan.insert(db)}else{print("this book does not exist")}
-                
-                /// will try to add the information to the loans table
-    
+                    try newLoan.insert(db)
+                } else {
+                    print("this book does not exist")
+                }
+
+            /// will try to add the information to the loans table
 
             case 2:
                 let newBook = Books(
@@ -509,6 +560,8 @@ func addRecord(dbQueue: DatabaseQueue) {
     }
 }
 
+/// 
+/// - Parameter dbQueue: 
 func processLoanReturn(dbQueue: DatabaseQueue) {
     print("you have chosen to return a book")
     let loanToReturnId = inputCheckNumberNoUpBoundry(
@@ -525,12 +578,67 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
                     try book.update(db)
                 }
             } else {
-                print("please check the ID you input exists and a return hasnt already been processed for this loan")
+                print(
+                    "please check the ID you input exists and a return hasnt already been processed for this loan"
+                )
 
             }
 
         }
     } catch { print(error) }
+}
+/// 
+/// - Parameter dbQueue: 
+func editCustomer(dbQueue: DatabaseQueue) {
+    let customerChange = inputCheckNumberNoUpBoundry(
+        prompt: customerChangePrompt, lowerBound: IDsLowerBound)
+    do {
+        try dbQueue.write { db in
+            if var customer = try Customer.fetchOne(db, key: customerChange) {
+                // used so if the customer first name is left blank the name can be reset to what it was before later
+                let customerFirstName = customer.firstName
+                // used so if the customer last name is left blank the name can be reset to what it was before later
+                let customerLastName = customer.lastName
+
+                // used so if the customer phone number is left blank the name can be reset to what it was before later
+                let customerPhoneNumber = customer.phoneNumber
+
+                // grabs the new first name
+                customer.firstName = stringGrabberNameChange(
+                    lowerBound: shortestName,
+                    upperBound: longestName, prompt: customerFirstNameChangePrompt)
+
+                // checks if user left the name blank
+                if customer.firstName == "" {
+                    // if left blank the user first name is reset
+                    customer.firstName = customerFirstName
+                }
+
+                // as above checks grabs the customer last name and checks if blank
+                customer.lastName = stringGrabberNameChange(
+                    lowerBound: shortestName,
+                    upperBound: longestName, prompt: customerLastNameChangePrompt)
+
+                // if blank the customer last name is restored
+                if customer.lastName == "" {
+                    customer.lastName = customerLastName
+                }
+
+                // uses string grabber to get the new phone number
+                customer.phoneNumber = stringGrabberNameChange(
+                    lowerBound: shortestPhoneNumber,
+                    upperBound: longestPhoneNumber, prompt: customerPhoneNumberChangePrompt)
+                //resets customer phone number if left blank
+                if customer.phoneNumber == "" {
+                    customer.phoneNumber = customerPhoneNumber
+                }
+
+                // once all records have been retrived and set to the proper value it is updated
+                try customer.update(db)
+
+            }
+        }
+    } catch { print("you ran into an error :\(error)") }
 }
 
 // think record to delte needs to go instead of loan will change later
@@ -558,7 +666,7 @@ struct SwiftPlayground {
             var userContinueBool: Bool = false
             /// main menu function, this function prints the main menu and checks the user input is valid
             let mainMenuOption = inputCheckNumber(
-                prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuupperBound)
+                prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuUpperBound)
             /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
             switch mainMenuOption {
             case 1:
@@ -570,10 +678,15 @@ struct SwiftPlayground {
             case 3:
                 print("you have chosen to delete a file")
             case 4:
+                // runs the add record function
                 addRecord(dbQueue: dbQueue)
             case 5:
+                //proccess a return
                 processLoanReturn(dbQueue: dbQueue)
             case 6:
+                // edits a customer
+                editCustomer(dbQueue: dbQueue)
+            case 7:
                 print("Goodbye!")
                 systemRunning = false
                 userContinueBool = true
