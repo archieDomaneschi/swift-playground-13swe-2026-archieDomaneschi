@@ -17,9 +17,22 @@ let mainMessage =
     2: print an entire table? 
     3: delete a file? 
     4: add a file? 
-    5: to quit
+    5: process a return
+    6: to quit
 
     """)
+
+let loanReturnPrompt = ("please enter the ID of the loan being returned")
+
+// this is hte prompt used to ask users how many books they are adding in addRecord
+let amountPrompt = ("how many books would you like to add")
+
+//this is always assigned to a new loan and gets changed to statusReturned when a return is processeed
+let statusLoan = "Loaned"
+
+// this is what gets useed in processReturn func
+let statusReturn = "Returned"
+
 // user is prompted this when they have finished a task.
 let continuePrompt = ("press enter when you wnat to continue")
 
@@ -83,7 +96,7 @@ let lastNamePrompt = ("what is the customers last name? ")
 // prompt used when asking for customer first name in addCustomer function
 let phoneNumberPrompt = ("what is the customers phone number? ")
 
-// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func 
+// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
 let deletePromptCustomer = ("please insert the Customer ID of the record you want to delete ")
 
 // prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
@@ -108,9 +121,12 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
     /// year the book was published
     let year: String
 
+    ///the amount of books you are adding to the system
+    var amount: Int
+
     var description: String {
         // see testing table for source of default and the solution i used
-        "book ID: \(id, default: "N/A") | Title: \(title) | Author: \(author) | Date of Publication: \(year)"
+"book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -118,6 +134,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
         case title = "Title"
         case author = "Author"
         case year = "YearPublished"
+        case amount = "AmountAvailable"
     }
     /// because the names i have the DB dont conform to camelcase i need this
     enum Columns {
@@ -125,6 +142,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
         static let author = Column("Author")
         static let year = Column("YearPublished")
         static let id = Column("BookID")
+        static let amount = Column("AmountAvailable")
     }
 }
 /// this Struct contains the blueprint and coding keys to creeate a new Customer
@@ -146,7 +164,7 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     /// description of customer
     var description: String {
         // *note* used VS code and a google to : "https://surl.lt/mdhdpd"
-        "ID: \(id, default: "N/A" ) | Name: \(firstName) \(lastName) | Phone Number: \(phoneNumber)"
+        "ID: \(id, default: "N/A" ) |Name: \(firstName) \(lastName) |Phone Number: \(phoneNumber)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -165,7 +183,9 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     }
 }
 
-struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, PersistableRecord, MutablePersistableRecord {
+struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, PersistableRecord,
+    MutablePersistableRecord
+{
     /// an id given to any customer added,
     let customerID: Int
 
@@ -177,11 +197,14 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
     /// date book was borrowed
     let dateBorrowed: String
     /// date book was returned
-    let dateReturned: String?
+    var dateReturned: String?
+
+    ///weather the loan is out or returned
+    var status: String
 
     /// description of customer
     var description: String {
-        "CustomerID: \(customerID) |BookID: \(bookID) | Date Borrowed: \(dateBorrowed)"
+        "CustomerID: \(customerID) |BookID: \(bookID) |Date Borrowed: \(dateBorrowed)|"
     }
     /// to conform to Codable
     enum CodingKeys: String, CodingKey {
@@ -190,6 +213,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
         case bookID = "BookID"
         case dateBorrowed = "DateBorrowed"
         case dateReturned = "DateReturn"
+        case status = "Status"
     }
     /// because the names i have the DB dont conform to camelcase i need this
     enum Columns {
@@ -198,6 +222,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
         static let bookID = Column("BookID")
         static let dateBorrowed = Column("DateBorrowed")
         static let dateReturned = Column("DateReturned")
+        static let status = Column("Status")
 
     }
 
@@ -418,9 +443,15 @@ func addRecord(dbQueue: DatabaseQueue) {
                         prompt: bookIdPrompt, lowerBound: IDsLowerBound),
 
                     /// uses dategrabber function to grab the date the book was handed out
-                    dateBorrowed: dateGrabber(), dateReturned: nil)
+                    dateBorrowed: dateGrabber(), dateReturned: nil, status: statusLoan)
+                //update the amount of books using bookID linked to loan
+                if var book = try Books.fetchOne(db, key: newLoan.bookID) {
+                    book.amount -= 1
+                    try book.update(db)
+                    try newLoan.insert(db)}else{print("this book does not exist")}
+                
                 /// will try to add the information to the loans table
-                try newLoan.insert(db)
+    
 
             case 2:
                 let newBook = Books(
@@ -432,7 +463,10 @@ func addRecord(dbQueue: DatabaseQueue) {
                         lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt),
                     year: stringGrabber(
                         lowerBound: oldestDateOfPublication, upperBound: newestPublication,
-                        prompt: yearOfPublicationPrompt))
+                        prompt: yearOfPublicationPrompt),
+                    amount: inputCheckNumberNoUpBoundry(
+                        prompt:
+                            amountPrompt, lowerBound: IDsLowerBound))
                 // trys to safely insert all information into the tables
                 try newBook.insert(db)
 
@@ -464,29 +498,33 @@ func addRecord(dbQueue: DatabaseQueue) {
     }
 }
 
-func deleteRecord(dbQueue: DatabaseQueue){
-    print(" you have chosen to delete a record from a table, your options are:")
-    let tableNumber = inputCheckNumber(
-        prompt: availableTables,
-        lowerBound: tablesLowerBound, upperBound: tablesUpbound)
-    do{
-        try dbQueue.write{db in switch 
-        tableNumber{
-            case 1: 
-                let idToDelete = inputCheckNumberNoUpBoundry(prompt: deletePromptLoan, 
-                lowerBound: IDsLowerBound) 
-                if let recordToDelete = try Loan.fetchOne(db, key: idToDelete){
-                    try Loan.delete(db, key: recordToDelete)
+func processLoanReturn(dbQueue: DatabaseQueue) {
+    print("you have chosen to return a book")
+    let loanToReturnId = inputCheckNumberNoUpBoundry(
+        prompt: loanReturnPrompt, lowerBound: IDsLowerBound)
+    do {
+        try dbQueue.write { db in
+            if var loan = try Loan.fetchOne(db, key: loanToReturnId) {
+                loan.status = statusReturn
+                loan.dateReturned = dateGrabber()
+                try loan.update(db)
+
+                //update the amount of books using bookID linked to loan
+                if var book = try Books.fetchOne(db, key: loan.bookID) {
+                    book.amount += 1
+                    try book.update(db)
                 }
-            
-            case 2: print("silence")
-            case 3: print("silecne ")
-            default: print("that is not an option")
-        }}
-        
-    }catch{
-        print("please ensure the record you are trying to delete exists")
-        print(error)}
+            } else {
+                print("this ID does not exist")
+
+            }
+
+        }
+    } catch { print(error) }
+}
+
+// think record to delte needs to go instead of loan will change later
+func deleteRecord(dbQueue: DatabaseQueue) {
 
 }
 
@@ -524,6 +562,8 @@ struct SwiftPlayground {
             case 4:
                 addRecord(dbQueue: dbQueue)
             case 5:
+                processLoanReturn(dbQueue: dbQueue)
+            case 6:
                 print("Goodbye!")
                 systemRunning = false
                 userContinueBool = true
@@ -533,7 +573,6 @@ struct SwiftPlayground {
 
             }
 
-            
             while userContinueBool == false {
                 print("press enter to continue")
                 let userContinue = readLine()
@@ -547,7 +586,7 @@ struct SwiftPlayground {
                 }
 
             }
-            
+
         }
 
         //change to input later, placeholder rn
