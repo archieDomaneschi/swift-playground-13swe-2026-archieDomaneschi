@@ -64,6 +64,9 @@ let shortestTitle = 2
 // longest possible title length used in addfile function in case 2
 let longestTitle = 255
 
+// used in the deleteRecord func to make it clear to the user what they chose to do
+let deleteWelcomePrompt = ("you have chosen to delete a record, below are the options you have")
+
 //used in the addRFile function in case 2 to get the title of a book eing added
 let bookTitlePrompt = ("please Input the title of the book the book you wish to add:")
 
@@ -100,9 +103,6 @@ let customerIdPrompt = ("please input the ID of the customer seeking to take out
 //the prompt used in the addrecord function to get the book ID of the desierd loan
 let bookIdPrompt = ("please input the ID of the book the customer is seeking to loan out:")
 
-//the prompt used when asking the user to input the date of loan
-let dateBorrowedPrompt = ("please input todays date:")
-
 // prompt used when asking for customer first name in addCustomer function
 let firstNamePrompt = ("what is the customers first name? ")
 
@@ -113,13 +113,7 @@ let lastNamePrompt = ("what is the customers last name? ")
 let phoneNumberPrompt = ("what is the customers phone number? ")
 
 // prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
-let deletePromptCustomer = ("please insert the Customer ID of the record you want to delete ")
-
-// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
-let deletePromptBook = ("please inste the Book ID of the record you want to delete")
-
-// prompt used when asking what the customerID of the record they are attempting to delete is in dleterecord func
-let deletePromptLoan = ("please insert the Loan ID of the record you want to delete")
+let deletePrompt = ("please insert the ID of the record you want to delete ")
 
 /// this struct is the framework for a book with all information that is needed to create a new book
 struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRecord,
@@ -646,10 +640,59 @@ func editCustomer(dbQueue: DatabaseQueue) {
     } catch { print("you ran into an error :\(error)") }
 }
 
-// think record to delte needs to go instead of loan will change later
-func deleteRecord(dbQueue: DatabaseQueue) {
 
+/// deletes a record based off of the suer input, works for all tables 
+/// - Parameter dbQueue: passes a connection to the data base to the function
+func deleteRecord(dbQueue: DatabaseQueue){
+    system("clear")
+    print(deleteWelcomePrompt)
+    /// gets the desierd table number from the user 
+    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: tablesLowerBound, upperBound: tablesUpbound)
+    /// prints out the table the user has decided to alter 
+    print("you have chosen to delete a record from the \(tables[tableNumber - 1]) table")
+    /// gets the ID the user wants to delete this is checked and used later in the case statements 
+    let id = inputCheckNumberNoUpBoundry(prompt: deletePrompt, lowerBound: IDsLowerBound)
+    do{
+        ///performs database operations
+        try dbQueue.write{db in switch tableNumber{
+            /// if the user responded to the prompt above with one they chose to lter theloan table 
+            case 1: if let record = try Loan.fetchOne(db, key: id){
+                /// if the record exists it will try to delte the record from the database 
+                try record.delete(db)
+                print("file deleted succesfully!")
+             /// if no record is found the else block is ran and the function is exited    
+            }else {
+                /// lets the user know no ID could be found 
+                print("no record with ID : \(id) found, no changes have been made")
+            }
+            /// if the user input 2 then they wanted to alter the books table and checks if the ID they selected exists
+            case 2: if let record = try Books.fetchOne(db, key: id){
+                /// if the id exists it will attempt to delete the record 
+                try record.delete(db)
+                print("file deleted succesfully!")
+            /// if the ID does not exist this else block is triggerd, prints no id coudl be found 
+            }else{
+                print("no record with ID : \(id) found, no changes have been made")
+            }
+
+            /// if the user input 3 they want to edit the customer table, checks if the selcted ID exists 
+            case 3: if let record = try Customer.fetchOne(db, key: id){
+                /// if the ID exists the code will try to delte it from database, any  errors thrown are handeled by catch below 
+                try record.delete(db)
+                print("file deleted succesfully!")
+                /// if Id does not exist this else block is ran and the function is exited 
+                }else{
+                    print("no record with ID : \(id) found, no changes have been made")
+                }
+            // to make the switch exhaustave although this isnt exactly reachable given functions used for input
+            default: print("error! not an option")
+        }
+    }
+/// if any error is thrown by the delte function this is ran 
+}catch{print("you ran into an error: \(error)")}
 }
+
+
 
 @main
 struct SwiftPlayground {
@@ -681,7 +724,8 @@ struct SwiftPlayground {
                 // prints an entire table
                 printTable(dbQueue: dbQueue)
             case 3:
-                print("you have chosen to delete a file")
+                // runs the delete function
+                deleteRecord(dbQueue: dbQueue)
             case 4:
                 // runs the add record function
                 addRecord(dbQueue: dbQueue)
