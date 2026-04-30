@@ -33,7 +33,7 @@ let customerLastNameChangePrompt =
 
 ////used in editCustomer function to ask what phonenumber they would like to change the number to
 let customerPhoneNumberChangePrompt =
-    ("please enter the last name you would like the selcted custommers name changed to, or leave blank to leave unchanged")
+    ("please enter the new phone number you would like the selcted custommers number changed to, or leave blank to leave unchanged")
 //
 //used in the editCustomer function to ask the user the customer ID they are altering
 let customerChangePrompt = ("please enter the ID of the customer you are attempting to alter")
