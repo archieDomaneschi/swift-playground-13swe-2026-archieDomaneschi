@@ -14,7 +14,7 @@ let mainMessage =
     ("""
     would you like to: 
     1: find a singular file? 
-    2: print an entire table? 
+    2: print an entire table? (viewing books will view availability)
     3: delete a file? 
     4: add a file? 
     5: process a return
@@ -510,6 +510,7 @@ func addRecord(dbQueue: DatabaseQueue) {
                     book.amount -= 1
                     try book.update(db)
                     try newLoan.insert(db)
+                    print("record added succesfully")
                 } else {
                     print("this book does not exist")
                 }
@@ -532,6 +533,7 @@ func addRecord(dbQueue: DatabaseQueue) {
                             amountPrompt, lowerBound: IDsLowerBound))
                 // trys to safely insert all information into the tables
                 try newBook.insert(db)
+                print("record added succesfully")
 
             // only triggers when user inputs a 3
             case 3:
@@ -548,13 +550,15 @@ func addRecord(dbQueue: DatabaseQueue) {
                         upperBound: longestPhoneNumber, prompt: phoneNumberPrompt))
                 // trys to add in all customer details, because of functions used userinputs are safe by here
                 try newCustomer.insert(db)
+                print("record added succesfully")
+
 
             default: print("that was not an option sorry")
 
             }
 
         }
-        print("record added succesfully")
+        
     } catch {
         print("please ensure any information you add is valid and exists")
         print("ran into an error : \(error)")
