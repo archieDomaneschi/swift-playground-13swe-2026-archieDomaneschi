@@ -56,7 +56,7 @@ let continuePrompt = ("press enter when you wnat to continue")
 // used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
 let oldestDateOfPublication = 1
 // used when asking for the publication date assuming no book has been published in a year with 5 numbers
-let newestPublication = 4
+let newestPublication = 5
 
 // shortest title length, used in the addFile function in case 2
 let shortestTitle = 2
@@ -136,7 +136,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 
     var description: String {
         // see testing table for source of default and the solution i used
-        "book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
+"book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -214,7 +214,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
 
     /// description of customer
     var description: String {
-    "CustomerID: \(customerID) |BookID: \(bookID) |Date Borrowed: \(dateBorrowed)|Status: \(status)"
+        "CustomerID: \(customerID) |BookID: \(bookID) |Date Borrowed: \(dateBorrowed)|Status: \(status)"
     }
     /// to conform to Codable
     enum CodingKeys: String, CodingKey {
@@ -464,7 +464,7 @@ func stringGrabberNameChange(lowerBound: Int, upperBound: Int, prompt: String) -
     }
 }
 
-/// date grabber grabs the days date of when ever the user is taking out a book
+/// date grabber grabs the days date of when ever the user is taking out a book or returning a book
 /// - Returns: date in dd-mm-yyyy format
 func dateGrabber() -> String {
     let formatter = DateFormatter()
@@ -474,54 +474,78 @@ func dateGrabber() -> String {
     return dateFormatted
 }
 
-/// adds a singular record to the database
+/// adds a singular record to the database, grabs all nescasry values in the code 
 /// - Parameter dbQueue: passes the connection to the database to the function
 func addRecord(dbQueue: DatabaseQueue) {
+    // to increase how readable it is and declutter the system
     system("clear")
     print(" you have chosen to add a record to a table, your options are:")
+    /// gets user input between 1 and 3 
     let tableNumber = inputCheckNumber(
         prompt: availableTables,
         lowerBound: tablesLowerBound, upperBound: tablesUpbound)
+    /// only once a vlid input has been passed out of inputCheckNumber does this do block run
     do {
+        /// runs the switch and nescary case depending on user input 
         try dbQueue.write { db in
             switch tableNumber {
             // only trriggers when user inputs a 1
             case 1:
-                let newLoan = Loan(
-                    /// using the checked customer ID
-                    customerID: inputCheckNumberNoUpBoundry(
-                        prompt: customerIdPrompt, lowerBound: IDsLowerBound),
-
-                    /// leaves Loan ID blancustomerIdPromptk for the Db to auto incriment
-                    loanID: nil,
-                    bookID: inputCheckNumberNoUpBoundry(
-                        prompt: bookIdPrompt, lowerBound: IDsLowerBound),
-
-                    /// uses dategrabber function to grab the date the book was handed out
-                    dateBorrowed: dateGrabber(), dateReturned: nil, status: statusLoan)
-                //update the amount of books using bookID linked to loan
-                if var book = try Books.fetchOne(db, key: newLoan.bookID) {
-                    book.amount -= 1
-                    try book.update(db)
-                    try newLoan.insert(db)
-                    print("record added succesfully")
+            // i get the customer ID outside of the struct so i can check it 
+                let customerId = inputCheckNumberNoUpBoundry(
+                    prompt: customerIdPrompt, lowerBound: IDsLowerBound)
+                    // checks if its nill, if it is it runs an error message and returns to main menu
+                if try Customer.fetchOne(db, key: customerId) == nil {
+                    print("please ensure the Id you input exists")
+                // only if the Id exists does this code run
                 } else {
-                    print("this book does not exist")
+                    // defines the newLoan 
+                    let newLoan = Loan(
+                        // using the checked customer ID
+                        customerID: customerId,
+
+                        // leaves Loan ID blank for the Db to auto incriment
+                        loanID: nil,
+                        // only passes an ID into bookID when the input is a number greater than 0
+                        bookID: inputCheckNumberNoUpBoundry(
+                            prompt: bookIdPrompt, lowerBound: IDsLowerBound),
+
+                        // uses dategrabber function to grab the date the book was handed out
+                        dateBorrowed: dateGrabber(), dateReturned: nil, status: statusLoan)
+                    //update the amount of books using bookID linked to loan
+                    if var book = try Books.fetchOne(db, key: newLoan.bookID) {
+                        // updates the amount of books available to one less 
+                        book.amount -= 1
+                        // will try to insert the new loan
+                        try newLoan.insert(db)
+                        // only if the newloan was succesfully inserted the book amount gets updated
+                        try book.update(db)
+                        // so the customer knows all insertion functions are done and it was a success 
+                        print("record added succesfully")
+                    } else {
+                        // if the book ID could not be found this message is ran
+                        print("this book does not exist")
+                    }
                 }
 
-            /// will try to add the information to the loans table
-
             case 2:
+                // defines the new book structure 
                 let newBook = Books(
+                    // passes a nil value to the DB so the DB can auto incriment it 
                     id: nil,
+                    // uses stringgrabber to ask for name, only sets title when answer is within bounds 
                     title: stringGrabber(
                         lowerBound: shortestTitle, upperBound: longestTitle, prompt: bookTitlePrompt
                     ),
+                    // same as befroe for author 
                     author: stringGrabber(
                         lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt),
+                    // only when the input meets requierments is this value set
                     year: stringGrabber(
                         lowerBound: oldestDateOfPublication, upperBound: newestPublication,
                         prompt: yearOfPublicationPrompt),
+                    // in case the user is adding multipule copies to the library 
+                    
                     amount: inputCheckNumberNoUpBoundry(
                         prompt:
                             amountPrompt, lowerBound: IDsLowerBound))
@@ -534,9 +558,10 @@ func addRecord(dbQueue: DatabaseQueue) {
                 let newCustomer = Customer(
                     // leave ID nil and let DB auto incriment a new ID
                     id: nil,
-                    /// next three lines all grab customer infomration using string grabber
+                    // next three lines all grab customer infomration using string grabber
                     firstName: stringGrabber(
                         lowerBound: shortestName, upperBound: longestName, prompt: firstNamePrompt),
+                    // checks length
                     lastName: stringGrabber(
                         lowerBound: shortestName, upperBound: longestName, prompt: lastNamePrompt),
                     phoneNumber: stringGrabber(
@@ -545,38 +570,52 @@ func addRecord(dbQueue: DatabaseQueue) {
                 // trys to add in all customer details, because of functions used userinputs are safe by here
                 try newCustomer.insert(db)
                 print("record added succesfully")
-
-
+            // in the event a value not between 1 and 3 gets passed to the switch this is passed 
             default: print("that was not an option sorry")
 
             }
 
         }
-        
+    // any errors thrown by the trys get caught and printed here along with a more user friendly message 
     } catch {
+        // my user friednly error message 
         print("please ensure any information you add is valid and exists")
-        print("ran into an error : \(error)")
+        // splits up the system message from mine so it doesnt look like a crash
+        print("\n")
+        // system error message 
+        print("SYSTEM ERROR MESSAGE: \(error)")
     }
 }
 
-///
+/// processLoanReturn is a function purely dedicated to proccessing a reutrn, only used when the vustomer presses 5 
 /// - Parameter dbQueue:
 func processLoanReturn(dbQueue: DatabaseQueue) {
     print("you have chosen to return a book")
+    // gets the loan ID but only continues when input is safe 
     let loanToReturnId = inputCheckNumberNoUpBoundry(
         prompt: loanReturnPrompt, lowerBound: IDsLowerBound)
     do {
+        // seeing as the only userinput needed is the ID of the order as the rest of the stuff is hard coded in 
         try dbQueue.write { db in
+        // only if the ID exists is it alterd, if it doesnt exist i run the catch messaeg
             if var loan = try Loan.fetchOne(db, key: loanToReturnId) {
+                // updates the columns of the loan to the returned status 
                 loan.status = statusReturn
+                // updates the dateReturned column to the current date 
                 loan.dateReturned = dateGrabber()
-                try loan.update(db)
-                //update the amount of books using bookID linked to loan
+                
+                
+                //finds the book id using the reference found in the loan 
                 if var book = try Books.fetchOne(db, key: loan.bookID) {
+                    // once the book ID is found the amount gets increased and then updated
                     book.amount += 1
+                    // once both columns have beenupdated and the book has been found they get inserted
+                    try loan.update(db)
+                    // only once the loan is updated is teh book amount increased 
                     try book.update(db)
                 }
             } else {
+                // if the bookId cant be foundthis is ran 
                 print(
                     "please check the ID you input exists and a return hasnt already been processed for this loan"
                 )
@@ -584,15 +623,19 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
             }
 
         }
+        // any error thrown from a try block is handled here 
     } catch { print(error) }
 }
-///
+///edits a customers details
 /// - Parameter dbQueue:
 func editCustomer(dbQueue: DatabaseQueue) {
+    // first thing the function does is find the custoemr attempting to be eddited 
     let customerChange = inputCheckNumberNoUpBoundry(
         prompt: customerChangePrompt, lowerBound: IDsLowerBound)
+    // once a valid id has been enterd (although unchecked if it exists)
     do {
         try dbQueue.write { db in
+        //checks if the customer ID exists, if it doesnt all code that alters an ID is skipped 
             if var customer = try Customer.fetchOne(db, key: customerChange) {
                 // used so if the customer first name is left blank the name can be reset to what it was before later
                 let customerFirstName = customer.firstName
@@ -640,59 +683,61 @@ func editCustomer(dbQueue: DatabaseQueue) {
     } catch { print("you ran into an error :\(error)") }
 }
 
-
-/// deletes a record based off of the suer input, works for all tables 
+/// deletes a record based off of the suer input, works for all tables
 /// - Parameter dbQueue: passes a connection to the data base to the function
-func deleteRecord(dbQueue: DatabaseQueue){
+func deleteRecord(dbQueue: DatabaseQueue) {
     system("clear")
     print(deleteWelcomePrompt)
-    /// gets the desierd table number from the user 
-    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: tablesLowerBound, upperBound: tablesUpbound)
-    /// prints out the table the user has decided to alter 
+    /// gets the desierd table number from the user
+    let tableNumber = inputCheckNumber(
+        prompt: availableTables, lowerBound: tablesLowerBound, upperBound: tablesUpbound)
+    /// prints out the table the user has decided to alter
     print("you have chosen to delete a record from the \(tables[tableNumber - 1]) table")
-    /// gets the ID the user wants to delete this is checked and used later in the case statements 
+    /// gets the ID the user wants to delete this is checked and used later in the case statements
     let id = inputCheckNumberNoUpBoundry(prompt: deletePrompt, lowerBound: IDsLowerBound)
-    do{
+    do {
         ///performs database operations
-        try dbQueue.write{db in switch tableNumber{
-            /// if the user responded to the prompt above with one they chose to lter theloan table 
-            case 1: if let record = try Loan.fetchOne(db, key: id){
-                /// if the record exists it will try to delte the record from the database 
-                try record.delete(db)
-                print("file deleted succesfully!")
-             /// if no record is found the else block is ran and the function is exited    
-            }else {
-                /// lets the user know no ID could be found 
-                print("no record with ID : \(id) found, no changes have been made")
-            }
+        try dbQueue.write { db in
+            switch tableNumber {
+            /// if the user responded to the prompt above with one they chose to lter theloan table
+            case 1:
+                if let record = try Loan.fetchOne(db, key: id) {
+                    /// if the record exists it will try to delte the record from the database
+                    try record.delete(db)
+                    print("file deleted succesfully!")
+                    /// if no record is found the else block is ran and the function is exited
+                } else {
+                    /// lets the user know no ID could be found
+                    print("no record with ID : \(id) found, no changes have been made")
+                }
             /// if the user input 2 then they wanted to alter the books table and checks if the ID they selected exists
-            case 2: if let record = try Books.fetchOne(db, key: id){
-                /// if the id exists it will attempt to delete the record 
-                try record.delete(db)
-                print("file deleted succesfully!")
-            /// if the ID does not exist this else block is triggerd, prints no id coudl be found 
-            }else{
-                print("no record with ID : \(id) found, no changes have been made")
-            }
+            case 2:
+                if let record = try Books.fetchOne(db, key: id) {
+                    /// if the id exists it will attempt to delete the record
+                    try record.delete(db)
+                    print("file deleted succesfully!")
+                    /// if the ID does not exist this else block is triggerd, prints no id coudl be found
+                } else {
+                    print("no record with ID : \(id) found, no changes have been made")
+                }
 
-            /// if the user input 3 they want to edit the customer table, checks if the selcted ID exists 
-            case 3: if let record = try Customer.fetchOne(db, key: id){
-                /// if the ID exists the code will try to delte it from database, any  errors thrown are handeled by catch below 
-                try record.delete(db)
-                print("file deleted succesfully!")
-                /// if Id does not exist this else block is ran and the function is exited 
-                }else{
+            /// if the user input 3 they want to edit the customer table, checks if the selcted ID exists
+            case 3:
+                if let record = try Customer.fetchOne(db, key: id) {
+                    /// if the ID exists the code will try to delte it from database, any  errors thrown are handeled by catch below
+                    try record.delete(db)
+                    print("file deleted succesfully!")
+                    /// if Id does not exist this else block is ran and the function is exited
+                } else {
                     print("no record with ID : \(id) found, no changes have been made")
                 }
             // to make the switch exhaustave although this isnt exactly reachable given functions used for input
             default: print("error! not an option")
+            }
         }
-    }
-/// if any error is thrown by the delte function this is ran 
-}catch{print("you ran into an error: \(error)")}
+        /// if any error is thrown by the delte function this is ran
+    } catch { print("you ran into an error: \(error)") }
 }
-
-
 
 @main
 struct SwiftPlayground {
