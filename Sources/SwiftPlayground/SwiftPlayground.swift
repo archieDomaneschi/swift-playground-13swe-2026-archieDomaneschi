@@ -214,7 +214,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
 
     /// description of customer
     var description: String {
-        "CustomerID: \(customerID) |BookID: \(bookID) |Date Borrowed: \(dateBorrowed)|"
+    "CustomerID: \(customerID) |BookID: \(bookID) |Date Borrowed: \(dateBorrowed)|Status: \(status)"
     }
     /// to conform to Codable
     enum CodingKeys: String, CodingKey {
