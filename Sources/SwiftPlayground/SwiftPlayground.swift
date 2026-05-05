@@ -181,14 +181,14 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
         case id = "CustomerID"
         case firstName = "FirstName"
         case lastName = "LastName"
-        case phoneNumber = "Phone_Number"
+        case phoneNumber = "PhoneNumber"
     }
     /// because the names i have the DB dont conform to camelcase i need this
     enum Columns {
         static let id = Column("CustomerID")
         static let firstName = Column("FirstName")
         static let lastName = ("LastName")
-        static let phoneNumber = Column("Phone_Number")
+        static let phoneNumber = Column("PhoneNumber")
 
     }
 }
