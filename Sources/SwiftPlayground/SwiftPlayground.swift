@@ -332,7 +332,7 @@ func printTable(dbQueue: DatabaseQueue) {
                 var unAvailability: [String] = []
                 var available: [String] = []
                 let results = try Books.fetchAll(db)
-                /// cycles through the results adding to unavailable if amount of books = 0 could use MFR here 
+                /// cycles through the results adding to unavailable if amount of books = 0 could use MFR here
                 for result in results {
                     if result.amount == outOfStock {
                         unAvailability.append(result.description)
@@ -344,9 +344,10 @@ func printTable(dbQueue: DatabaseQueue) {
                     print("IN STOCK || \(available.description)")
                 }
                 // splits up results so they are more clear
-                print("""
-                =======================================================================================================
-                """)
+                print(
+                    """
+                    =======================================================================================================
+                    """)
                 for unAvailable in unAvailability {
                     print("OUT OF STOCK || \(unAvailable.description) ")
                 }
@@ -615,7 +616,7 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
         try dbQueue.write { db in
             // only if the ID exists is it alterd, if it doesnt exist i run the catch messaeg
             if var loan = try Loan.fetchOne(db, key: loanToReturnId) {
-                // checks if hte loan has already been proccesed 
+                // checks if hte loan has already been proccesed
                 if loan.status != statusReturn {
                     // updates the columns of the loan to the returned status
                     loan.status = statusReturn
@@ -632,7 +633,9 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
                         try book.update(db)
                         print("Loan returned successfully")
                     }
-                }else{print("Loan number \(loan.loanID, default: "N/A") has already been returned")}
+                } else {
+                    print("Loan number \(loan.loanID, default: "N/A") has already been returned")
+                }
             } else {
                 // if the bookId cant be foundthis is ran
                 print(
@@ -645,6 +648,48 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
         // any error thrown from a try block is handled here
     } catch { print(error) }
 }
+
+/// printCustomer table, checks if the user wants to print all customers
+/// - Parameter dbQueue: passes a connection to the database to the function
+func printCustomerTableOptional(dbQueue: DatabaseQueue) {
+    // only able to exit when the user makes a valid choice (yes or no) 
+    var printTableControl = false
+    // anytime the function is called it goes straight into this loop because its set to false above
+    while printTableControl == false {
+        // declutters the terminal
+        system("clear")
+        print("before you edit a customers record would you like to view all customer records?")
+        // gets user input and uses if let readline to check it 
+        if let userPrintTable = readLine() {
+            // lowercases it to ensure any vairiation of yes or no is accepteed
+            if userPrintTable.lowercased() == "yes" {
+                do {
+                    /// trys to read all the customer table any errors are thrown to the print statment
+                    try dbQueue.read { db in
+                        /// fetches all customer records
+                        let results = try Customer.fetchAll(db)
+                        /// cycles through the results suing the description message
+                        for result in results {
+                            print(result.description)
+                        }
+                    // breaks the loop exitiing the function 
+                    printTableControl = true
+                    }
+                // any errors thrown by trys or dos are caught here
+                } catch { print(error) }
+            // if its not yes the next test is no, if it is no it breaks the loop and exits the function 
+            } else if userPrintTable.lowercased() == "no" {
+                printTableControl = true
+            } else {
+                // so the user has to input yes or no it is impossible to get out of the function with out it 
+                print("please input yes or no ")
+            }
+
+        }
+
+    }
+}
+
 ///edits a customers details
 /// - Parameter dbQueue:
 func editCustomer(dbQueue: DatabaseQueue) {
@@ -797,9 +842,11 @@ struct SwiftPlayground {
                 //proccess a return
                 processLoanReturn(dbQueue: dbQueue)
             case 6:
-                // edits a customer
+                // while testing i found it slow to have to remember all the customer ids so i added this to print all
+                printCustomerTableOptional(dbQueue: dbQueue)
+                // edits a customer once i ask if they want to view all customer records
                 editCustomer(dbQueue: dbQueue)
-                // exit statement, skips the continue function at the bottom and exits the while loop over the function
+            // exit statement, skips the continue function at the bottom and exits the while loop over the function
             case 7:
                 print("Goodbye!")
                 systemRunning = false
@@ -809,7 +856,7 @@ struct SwiftPlayground {
                 print("please choose one of the above options")
 
             }
-            // set to false at the top of the function, set to true in case 7, the exit statement 
+            // set to false at the top of the function, set to true in case 7, the exit statement
             while userContinueBool == false {
                 print("press enter to continue")
                 // doesnt need to check if its anything or meets anyboundries to didnt use stringgrabber
