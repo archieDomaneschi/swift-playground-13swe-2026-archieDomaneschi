@@ -60,6 +60,9 @@ let oldestDateOfPublication = 1
 // used when asking for the publication date assuming no book has been published in a year with 5 numbers
 let newestPublication = 4
 
+// used when printing out stock in printTable function
+let outOfStock = 0
+
 // shortest title length, used in the addFile function in case 2
 let shortestTitle = 2
 
@@ -328,9 +331,9 @@ func printTable(dbQueue: DatabaseQueue) {
                 var unAvailability: [String] = []
                 var available: [String] = []
                 let results = try Books.fetchAll(db)
-                /// cycles through the results adding to unavailable if amount of books = 0
+                /// cycles through the results adding to unavailable if amount of books = 0 could use MFR here 
                 for result in results {
-                    if result.amount == 0 {
+                    if result.amount == outOfStock {
                         unAvailability.append(result.description)
                     } else {
                         available.append(result.description)
@@ -339,6 +342,10 @@ func printTable(dbQueue: DatabaseQueue) {
                 for available in available {
                     print("IN STOCK || \(available.description)")
                 }
+                // splits up results so they are more clear
+                print("""
+                =======================================================================================================
+                """)
                 for unAvailable in unAvailability {
                     print("OUT OF STOCK || \(unAvailable.description) ")
                 }
@@ -791,6 +798,7 @@ struct SwiftPlayground {
             case 6:
                 // edits a customer
                 editCustomer(dbQueue: dbQueue)
+                // exit statement, skips the continue function at the bottom and exits the while loop over the function
             case 7:
                 print("Goodbye!")
                 systemRunning = false
@@ -800,22 +808,19 @@ struct SwiftPlayground {
                 print("please choose one of the above options")
 
             }
-
+            // set to false at the top of the function, set to true in case 7, the exit statement 
             while userContinueBool == false {
                 print("press enter to continue")
+                // doesnt need to check if its anything or meets anyboundries to didnt use stringgrabber
                 let userContinue = readLine()
                 if userContinue == "" {
                     userContinueBool = true
                     system("clear")
-
+                    // if the user inputs anything this is tripped
                 } else {
                     print("please only press enter")
-
                 }
-
             }
-
         }
-
     }
 }
