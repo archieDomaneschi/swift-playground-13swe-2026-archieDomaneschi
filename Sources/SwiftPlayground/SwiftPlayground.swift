@@ -53,10 +53,12 @@ let statusReturn = "Returned"
 // user is prompted this when they have finished a task.
 let continuePrompt = ("press enter when you wnat to continue")
 
+// used to check the amount used when asking how many books is beign added is valid(no less than 0)
+let bookAmountLowerBound = 1
 // used when getting date of publication, assuming the book was not written before years were 1 digit long (eg 1AD)
 let oldestDateOfPublication = 1
 // used when asking for the publication date assuming no book has been published in a year with 5 numbers
-let newestPublication = 5
+let newestPublication = 4
 
 // shortest title length, used in the addFile function in case 2
 let shortestTitle = 2
@@ -136,7 +138,7 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 
     var description: String {
         // see testing table for source of default and the solution i used
-"book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
+        "book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -366,16 +368,22 @@ func findSingle(dbQueue: DatabaseQueue) {
     print("you have chosen to search for a singular record, available tables: ")
     // using the function before I get the number associated with the table the user is after
     let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
-    print(
-        " you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for"
-    )
-    let userSingleQuery = inputCheckNumberNoUpBoundry(prompt: ":", lowerBound: IDsLowerBound)
+    // prints out the selected table
+    let userSingleQuery = inputCheckNumberNoUpBoundry(
+        prompt:
+            " you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for",
+        lowerBound: IDsLowerBound)
     do {
+        //once a input that is checked to be a int is retrived the input is used to find the loan
         try dbQueue.read { db in
             switch tableNumber {
+            // uses table number from above to determine which table is being searched
             case 1:
+                // safely retrives a loan using if let, becasue it could be nil i have a message that prints if it is
                 if let result = try Loan.fetchOne(db, key: userSingleQuery) {
-                    print(result.description)
+                    if let name = try Customer.fetchOne(db, key: result.customerID) {
+                        print("\(result.description) |Loaned By: \(name.firstName)")
+                    }
                 } else {
                     print("no record with ID: \(userSingleQuery) could be found")
                 }
@@ -474,32 +482,32 @@ func dateGrabber() -> String {
     return dateFormatted
 }
 
-/// adds a singular record to the database, grabs all nescasry values in the code 
+/// adds a singular record to the database, grabs all nescasry values in the code
 /// - Parameter dbQueue: passes the connection to the database to the function
 func addRecord(dbQueue: DatabaseQueue) {
     // to increase how readable it is and declutter the system
     system("clear")
     print(" you have chosen to add a record to a table, your options are:")
-    /// gets user input between 1 and 3 
+    /// gets user input between 1 and 3
     let tableNumber = inputCheckNumber(
         prompt: availableTables,
         lowerBound: tablesLowerBound, upperBound: tablesUpbound)
     /// only once a vlid input has been passed out of inputCheckNumber does this do block run
     do {
-        /// runs the switch and nescary case depending on user input 
+        /// runs the switch and nescary case depending on user input
         try dbQueue.write { db in
             switch tableNumber {
             // only trriggers when user inputs a 1
             case 1:
-            // i get the customer ID outside of the struct so i can check it 
+                // i get the customer ID outside of the struct so i can check it
                 let customerId = inputCheckNumberNoUpBoundry(
                     prompt: customerIdPrompt, lowerBound: IDsLowerBound)
-                    // checks if its nill, if it is it runs an error message and returns to main menu
+                // checks if its nill, if it is it runs an error message and returns to main menu
                 if try Customer.fetchOne(db, key: customerId) == nil {
                     print("please ensure the Id you input exists")
-                // only if the Id exists does this code run
+                    // only if the Id exists does this code run
                 } else {
-                    // defines the newLoan 
+                    // defines the newLoan
                     let newLoan = Loan(
                         // using the checked customer ID
                         customerID: customerId,
@@ -514,13 +522,13 @@ func addRecord(dbQueue: DatabaseQueue) {
                         dateBorrowed: dateGrabber(), dateReturned: nil, status: statusLoan)
                     //update the amount of books using bookID linked to loan
                     if var book = try Books.fetchOne(db, key: newLoan.bookID) {
-                        // updates the amount of books available to one less 
+                        // updates the amount of books available to one less
                         book.amount -= 1
                         // will try to insert the new loan
                         try newLoan.insert(db)
                         // only if the newloan was succesfully inserted the book amount gets updated
                         try book.update(db)
-                        // so the customer knows all insertion functions are done and it was a success 
+                        // so the customer knows all insertion functions are done and it was a success
                         print("record added succesfully")
                     } else {
                         // if the book ID could not be found this message is ran
@@ -529,26 +537,26 @@ func addRecord(dbQueue: DatabaseQueue) {
                 }
 
             case 2:
-                // defines the new book structure 
+                // defines the new book structure
                 let newBook = Books(
-                    // passes a nil value to the DB so the DB can auto incriment it 
+                    // passes a nil value to the DB so the DB can auto incriment it
                     id: nil,
-                    // uses stringgrabber to ask for name, only sets title when answer is within bounds 
+                    // uses stringgrabber to ask for name, only sets title when answer is within bounds
                     title: stringGrabber(
                         lowerBound: shortestTitle, upperBound: longestTitle, prompt: bookTitlePrompt
                     ),
-                    // same as befroe for author 
+                    // same as befroe for author
                     author: stringGrabber(
                         lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt),
                     // only when the input meets requierments is this value set
                     year: stringGrabber(
                         lowerBound: oldestDateOfPublication, upperBound: newestPublication,
                         prompt: yearOfPublicationPrompt),
-                    // in case the user is adding multipule copies to the library 
-                    
+                    // in case the user is adding multipule copies to the library
+
                     amount: inputCheckNumberNoUpBoundry(
                         prompt:
-                            amountPrompt, lowerBound: IDsLowerBound))
+                            amountPrompt, lowerBound: bookAmountLowerBound))
                 // trys to safely insert all information into the tables
                 try newBook.insert(db)
                 print("record added succesfully")
@@ -570,72 +578,75 @@ func addRecord(dbQueue: DatabaseQueue) {
                 // trys to add in all customer details, because of functions used userinputs are safe by here
                 try newCustomer.insert(db)
                 print("record added succesfully")
-            // in the event a value not between 1 and 3 gets passed to the switch this is passed 
+            // in the event a value not between 1 and 3 gets passed to the switch this is passed
             default: print("that was not an option sorry")
 
             }
 
         }
-    // any errors thrown by the trys get caught and printed here along with a more user friendly message 
+        // any errors thrown by the trys get caught and printed here along with a more user friendly message
     } catch {
-        // my user friednly error message 
+        // my user friednly error message
         print("please ensure any information you add is valid and exists")
         // splits up the system message from mine so it doesnt look like a crash
         print("\n")
-        // system error message 
+        // system error message
         print("SYSTEM ERROR MESSAGE: \(error)")
     }
 }
 
-/// processLoanReturn is a function purely dedicated to proccessing a reutrn, only used when the vustomer presses 5 
+/// processLoanReturn is a function purely dedicated to proccessing a reutrn, only used when the vustomer presses 5
 /// - Parameter dbQueue:
 func processLoanReturn(dbQueue: DatabaseQueue) {
     print("you have chosen to return a book")
-    // gets the loan ID but only continues when input is safe 
+    // gets the loan ID but only continues when input is safe
     let loanToReturnId = inputCheckNumberNoUpBoundry(
         prompt: loanReturnPrompt, lowerBound: IDsLowerBound)
     do {
-        // seeing as the only userinput needed is the ID of the order as the rest of the stuff is hard coded in 
+        // seeing as the only userinput needed is the ID of the order as the rest of the stuff is hard coded in
         try dbQueue.write { db in
-        // only if the ID exists is it alterd, if it doesnt exist i run the catch messaeg
+            // only if the ID exists is it alterd, if it doesnt exist i run the catch messaeg
             if var loan = try Loan.fetchOne(db, key: loanToReturnId) {
-                // updates the columns of the loan to the returned status 
-                loan.status = statusReturn
-                // updates the dateReturned column to the current date 
-                loan.dateReturned = dateGrabber()
-                
-                
-                //finds the book id using the reference found in the loan 
-                if var book = try Books.fetchOne(db, key: loan.bookID) {
-                    // once the book ID is found the amount gets increased and then updated
-                    book.amount += 1
-                    // once both columns have beenupdated and the book has been found they get inserted
-                    try loan.update(db)
-                    // only once the loan is updated is teh book amount increased 
-                    try book.update(db)
-                }
+                // checks if hte loan has already been proccesed 
+                if loan.status != statusReturn {
+                    // updates the columns of the loan to the returned status
+                    loan.status = statusReturn
+                    // updates the dateReturned column to the current date
+                    loan.dateReturned = dateGrabber()
+
+                    //finds the book id using the reference found in the loan
+                    if var book = try Books.fetchOne(db, key: loan.bookID) {
+                        // once the book ID is found the amount gets increased and then updated
+                        book.amount += 1
+                        // once both columns have beenupdated and the book has been found they get inserted
+                        try loan.update(db)
+                        // only once the loan is updated is teh book amount increased
+                        try book.update(db)
+                        print("Loan returned successfully")
+                    }
+                }else{print("Loan number \(loan.loanID, default: "N/A") has already been returned")}
             } else {
-                // if the bookId cant be foundthis is ran 
+                // if the bookId cant be foundthis is ran
                 print(
-                    "please check the ID you input exists and a return hasnt already been processed for this loan"
+                    "This ID does not exist"
                 )
 
             }
 
         }
-        // any error thrown from a try block is handled here 
+        // any error thrown from a try block is handled here
     } catch { print(error) }
 }
 ///edits a customers details
 /// - Parameter dbQueue:
 func editCustomer(dbQueue: DatabaseQueue) {
-    // first thing the function does is find the custoemr attempting to be eddited 
+    // first thing the function does is find the custoemr attempting to be eddited
     let customerChange = inputCheckNumberNoUpBoundry(
         prompt: customerChangePrompt, lowerBound: IDsLowerBound)
     // once a valid id has been enterd (although unchecked if it exists)
     do {
         try dbQueue.write { db in
-        //checks if the customer ID exists, if it doesnt all code that alters an ID is skipped 
+            //checks if the customer ID exists, if it doesnt all code that alters an ID is skipped
             if var customer = try Customer.fetchOne(db, key: customerChange) {
                 // used so if the customer first name is left blank the name can be reset to what it was before later
                 let customerFirstName = customer.firstName
