@@ -85,6 +85,7 @@ let yearOfPublicationPrompt = ("what year was the book you wish to add published
 let availableTables = "1. Loans 2. Books 3. Customers"
 // used when searching for an id as the number can be infinietly large but never less than 0
 let IDsLowerBound: Int = 0
+
 // to avoid magic numbers this is used when ever the user has to select a table, any search, write or delete function
 let tablesUpbound = 3
 
