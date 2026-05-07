@@ -23,14 +23,13 @@ let mainMessage =
 
     """)
 
-
-// used when everstringgarabber is used in a place where it cant return empty 
+// used when everstringgarabber is used in a place where it cant return empty
 let allowEmptyFalse = false
 
 // used anytime when the userinput can be empty
-let allowEmptyTrue = true 
-// used to compare user input to 0 used in used in stringGrabber 
-let stringLengthEmpty = 0 
+let allowEmptyTrue = true
+// used to compare user input to 0 used in used in stringGrabber
+let stringLengthEmpty = 0
 
 // i changed my inputchekcnuber to handle no upper bound so i can remove inputchecknumber no up boundry
 let noUpperBound: Int? = nil
@@ -252,7 +251,7 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
         static let loanID = Column("LoanID")
         static let bookID = Column("BookID")
         static let dateBorrowed = Column("DateBorrowed")
-        static let dateReturned = Column("DateReturned")
+        static let dateReturned = Column("DateReturn")
         static let status = Column("Status")
 
     }
@@ -426,9 +425,9 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String, allowEmpty:
         if let userInputString = readLine() {
             //gets the length of the input
             let stringLength = userInputString.count
-            // checks if the string is allowed to be empty and if it is empty 
-            if allowEmpty == true && stringLength == stringLengthEmpty{
-                // only occures in edit record when customer wants to keep the field the same 
+            // checks if the string is allowed to be empty and if it is empty
+            if allowEmpty == true && stringLength == stringLengthEmpty {
+                // only occures in edit record when customer wants to keep the field the same
                 return userInputString
             }
             // if allowempty is not true it runs the normal check if it is between boundries
@@ -501,14 +500,20 @@ func addRecord(dbQueue: DatabaseQueue) {
                         dateBorrowed: dateGrabber(), dateReturned: nil, status: statusLoan)
                     //update the amount of books using bookID linked to loan
                     if var book = try Books.fetchOne(db, key: newLoan.bookID) {
-                        // updates the amount of books available to one less
-                        book.amount -= 1
-                        // will try to insert the new loan
-                        try newLoan.insert(db)
-                        // only if the newloan was succesfully inserted the book amount gets updated
-                        try book.update(db)
-                        // so the customer knows all insertion functions are done and it was a success
-                        print("record added succesfully")
+                        // checks how much stock thebook has before adding 
+                        if book.amount != 0 {
+
+                            // updates the amount of books available to one less
+                            book.amount -= 1
+                            // will try to insert the new loan
+                            try newLoan.insert(db)
+                            // only if the newloan was succesfully inserted the book amount gets updated
+                            try book.update(db)
+                            // so the customer knows all insertion functions are done and it was a success
+                            print("record added succesfully")
+                        } else {
+                            print("sorry this book is out of stock")
+                        }
                     } else {
                         // if the book ID could not be found this message is ran
                         print("this book does not exist")
@@ -558,7 +563,8 @@ func addRecord(dbQueue: DatabaseQueue) {
                         prompt: lastNamePrompt, allowEmpty: allowEmptyFalse),
                     phoneNumber: stringGrabber(
                         lowerBound: shortestPhoneNumber,
-                        upperBound: longestPhoneNumber, prompt: phoneNumberPrompt, allowEmpty: allowEmptyFalse))
+                        upperBound: longestPhoneNumber, prompt: phoneNumberPrompt,
+                        allowEmpty: allowEmptyFalse))
                 // trys to add in all customer details, because of functions used userinputs are safe by here
                 try newCustomer.insert(db)
                 print("record added succesfully")
@@ -688,7 +694,8 @@ func editCustomer(dbQueue: DatabaseQueue) {
                 // grabs the new first name
                 customer.firstName = stringGrabber(
                     lowerBound: shortestName,
-                    upperBound: longestName, prompt: customerFirstNameChangePrompt, allowEmpty: allowEmptyTrue)
+                    upperBound: longestName, prompt: customerFirstNameChangePrompt,
+                    allowEmpty: allowEmptyTrue)
 
                 // checks if user left the name blank
                 if customer.firstName == "" {
@@ -699,7 +706,8 @@ func editCustomer(dbQueue: DatabaseQueue) {
                 // as above checks grabs the customer last name and checks if blank
                 customer.lastName = stringGrabber(
                     lowerBound: shortestName,
-                    upperBound: longestName, prompt: customerLastNameChangePrompt, allowEmpty: allowEmptyFalse)
+                    upperBound: longestName, prompt: customerLastNameChangePrompt,
+                    allowEmpty: allowEmptyTrue)
 
                 // if blank the customer last name is restored
                 if customer.lastName == "" {
@@ -709,8 +717,8 @@ func editCustomer(dbQueue: DatabaseQueue) {
                 // uses string grabber to get the new phone number
                 customer.phoneNumber = stringGrabber(
                     lowerBound: shortestPhoneNumber,
-                    upperBound: longestPhoneNumber, prompt: customerPhoneNumberChangePrompt, 
-                    allowEmpty: allowEmptyFalse)
+                    upperBound: longestPhoneNumber, prompt: customerPhoneNumberChangePrompt,
+                    allowEmpty: allowEmptyTrue)
                 //resets customer phone number if left blank
                 if customer.phoneNumber == "" {
                     customer.phoneNumber = customerPhoneNumber
@@ -737,6 +745,7 @@ func deleteRecord(dbQueue: DatabaseQueue) {
     // gets the ID the user wants to delete this is checked and used later in the case statements
     let id = inputCheckNumber(
         prompt: deletePrompt, lowerBound: IDsLowerBound, upperBound: noUpperBound)
+
     do {
         //performs database operations
         try dbQueue.write { db in
@@ -744,9 +753,14 @@ func deleteRecord(dbQueue: DatabaseQueue) {
             // if the user responded to the prompt above with one they chose to lter theloan table
             case 1:
                 if let record = try Loan.fetchOne(db, key: id) {
-                    // if the record exists it will try to delte the record from the database
-                    try record.delete(db)
-                    print("file deleted succesfully!")
+                    // checks if the found loan has been returned
+                    if record.status == statusReturn {
+                        // if the record exists it will try to delte the record from the database
+                        try record.delete(db)
+                        print("file deleted succesfully!")
+                    } else {
+                        print("could not delete loan unreturned")
+                    }
                     // if no record is found the else block is ran and the function is exited
                 } else {
                     // lets the user know no ID could be found
@@ -754,10 +768,28 @@ func deleteRecord(dbQueue: DatabaseQueue) {
                 }
             // if the user input 2 then they wanted to alter the books table and checks if the ID they selected exists
             case 2:
-                if let record = try Books.fetchOne(db, key: id) {
-                    // if the id exists it will attempt to delete the record
-                    try record.delete(db)
-                    print("file deleted succesfully!")
+                if let recordDelte = try Books.fetchOne(db, key: id) {
+
+                    // filters the loan table for all loans of this book
+                    let recordCheck = try Loan.filter(Loan.Columns.bookID == id).fetchAll(db)
+
+                    // filters this list down to just anyhting that == loaned
+                    let recordStatus = recordCheck.filter { record in record.status == statusLoan }
+
+                    // if the new filterd list is empty it doesnt have any loans
+                    if recordStatus.isEmpty {
+                        // now that we know there are no outstanding loans on this book it can be delted
+                        for loan in recordCheck {
+                            // must delte all associated loans before i delte the book to avoid null issues
+                            try loan.delete(db)
+                        }
+                        // if the id exists and all loans are deleted it will attempt to delete the record
+                        try recordDelte.delete(db)
+
+                        print("file deleted succesfully!")
+                    } else {
+                        print("this book is currently loaned out")
+                    }
                     // if the ID does not exist this else block is triggerd, prints no id coudl be found
                 } else {
                     print("no record with ID : \(id) found, no changes have been made")
@@ -766,9 +798,27 @@ func deleteRecord(dbQueue: DatabaseQueue) {
             // if the user input 3 they want to edit the customer table, checks if the selcted ID exists
             case 3:
                 if let record = try Customer.fetchOne(db, key: id) {
-                    // if the ID exists the code will try to delte it from database, any  errors thrown are handeled by catch below
-                    try record.delete(db)
-                    print("file deleted succesfully!")
+                    // finds all loans this customer has and adds to a list
+                    let recordCheck = try Loan.filter(Loan.Columns.customerID == id).fetchAll(db)
+
+                    // filters this list down to just anyhting that == loaned
+                    let recordStatus = recordCheck.filter { record in record.status == statusLoan }
+
+                    // if the filterd list is empty the customer is delted
+                    if recordStatus.isEmpty {
+                        // by now we know the all loans from this customer have been returned
+                        for loan in recordCheck {
+                            // before i delte the customer i need to delte all their loans
+                            try loan.delete(db)
+                        }
+                        // if the ID exists and has no outstanding loans the code will try to delte it from database
+                        try record.delete(db)
+                        print("file deleted succesfully!")
+                        // if the customer has an outstanding loan this message is printed
+                    } else {
+                        print("this customer has an outstanding loan")
+                    }
+
                     // if Id does not exist this else block is ran and the function is exited
                 } else {
                     print("no record with ID : \(id) found, no changes have been made")
