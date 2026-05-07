@@ -142,7 +142,10 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
 
     var description: String {
         // see testing table for source of default and the solution i used
-        "book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)|AmountLeft \(amount)"
+        """
+        book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)
+        |AmountLeft \(amount)
+        """
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
