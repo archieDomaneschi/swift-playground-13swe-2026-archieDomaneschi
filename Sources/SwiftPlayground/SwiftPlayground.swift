@@ -23,6 +23,18 @@ let mainMessage =
 
     """)
 
+
+// used when everstringgarabber is used in a place where it cant return empty 
+let allowEmptyFalse = false
+
+// used anytime when the userinput can be empty
+let allowEmptyTrue = true 
+// used to compare user input to 0 used in used in stringGrabber 
+let stringLengthEmpty = 0 
+
+// i changed my inputchekcnuber to handle no upper bound so i can remove inputchecknumber no up boundry
+let noUpperBound: Int? = nil
+
 //used in editCustomer function to ask what the name they would like to change the name to
 let customerFirstNameChangePrompt =
     ("please enter the name you would like the selcted custommers name changed to, or leave blank to leave unchanged")
@@ -51,7 +63,7 @@ let statusLoan = "Loaned"
 let statusReturn = "Returned"
 
 // user is prompted this when they have finished a task.
-let continuePrompt = ("press enter when you wnat to continue")
+let continuePrompt = ("press enter when you want to continue")
 
 // used to check the amount used when asking how many books is beign added is valid(no less than 0)
 let bookAmountLowerBound = 1
@@ -252,22 +264,36 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
 ///   - lowerBound:the lower boundry of their answers
 ///   - upperBound: the upper boundry of their answers
 /// - Returns: when both bounds are satisfied returns the user input
-func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int {
+func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int?) -> Int {
     // will not be broken until a safe asnwer is passed
     while true {
         //prompt the user interacts with
         print(prompt)
         //checks if the user has inuted something and then if it is a number
         if let input = readLine(), let userNumber = Int(input) {
-            //checks if the user input is between the specifed boundries
-            if userNumber >= lowerBound && userNumber <= upperBound {
-                return userNumber
+            // once we know its a number i test if the upperBound is nil or not
+            if let upperBoundSafe = upperBound {
+                // if the upper bound is not nill it runs the usual code that tests if the input is between bounds
+                if userNumber >= lowerBound && userNumber <= upperBoundSafe {
+                    // if the code is between bounds it returns the input
+                    return userNumber
+                } else {
+                    // if the input is out of bounds but a number this error is thrown
+                    system("clear")
+                    print(userNumber)
+                    print("please ensure your input is between \(lowerBound) and \(upperBoundSafe)")
+                }
+                // if the upperbound value is nil then this code is ran that only checks input agaisnt lowerbound
             } else {
-                // if the input is out of bounds but a number this error is thrown
-                system("clear")
-                print(userNumber)
-                print("please ensure your input is between \(lowerBound) and \(upperBound)")
+
+                if userNumber >= lowerBound {
+                    // if the user input is above the lower bound this code is ran
+                    return userNumber
+                } else {
+                    print("please ensure your input is greater than \(lowerBound)")
+                }
             }
+
         } else {
             // if the answer is not a number or nill this is thrown
             system("clear")
@@ -275,38 +301,6 @@ func inputCheckNumber(prompt: String, lowerBound: Int, upperBound: Int) -> Int {
         }
     }
 }
-
-/// input checker for number returns with no upper bound (IDs)
-/// - Parameters:
-///   - prompt: the prompt the user is responding to
-///   - lowerBound:the lower boundry of their answers
-/// - Returns: when both bounds are satisfied returns the user input
-func inputCheckNumberNoUpBoundry(prompt: String, lowerBound: Int, ) -> Int {
-    // will not be broken until a safe asnwer is passed
-    while true {
-        //prompt the user interacts with
-        print(prompt)
-        //checks if the user has inuted something and then if it is a number
-        if let input = readLine(), let userNumber = Int(input) {
-
-            //checks if the user input is between the specifed boundries
-            if userNumber >= lowerBound {
-
-                return userNumber
-            } else {
-                // if the input is out of bounds but a number this error is thrown
-                system("clear")
-                print(userNumber)
-                print("please ensure your input is above \(lowerBound) ")
-            }
-        } else {
-            // if the answer is not a number or nill this is thrown
-            system("clear")
-            print("please make sure you input a number ")
-        }
-    }
-}
-
 /// prints out an entire table when the user selctes print table form the main menu currently
 /// - Parameters:
 ///   - dbQueue: to start a connection with the database
@@ -381,10 +375,10 @@ func findSingle(dbQueue: DatabaseQueue) {
     // using the function before I get the number associated with the table the user is after
     let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
     // prints out the selected table
-    let userSingleQuery = inputCheckNumberNoUpBoundry(
+    let userSingleQuery = inputCheckNumber(
         prompt:
             " you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for",
-        lowerBound: IDsLowerBound)
+        lowerBound: IDsLowerBound, upperBound: noUpperBound)
     do {
         //once a input that is checked to be a int is retrived the input is used to find the loan
         try dbQueue.read { db in
@@ -423,22 +417,23 @@ func findSingle(dbQueue: DatabaseQueue) {
 ///   - lowerBound: the lowest length the string the function is grabbing can be
 ///   - upperBound: the longest the string the function is grabbing can be
 ///   - prompt: the prompt the user is answering
+///   - AllowEmpty : this is used so the function can test if its allowed to return an empty string
 /// - Returns: returns a string to where ever it was called from once the input satisfies all inputs
-func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
+func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String, allowEmpty: Bool) -> String {
     print(prompt)
     while true {
+        //safely unwraps the user input
         if let userInputString = readLine() {
+            //gets the length of the input
             let stringLength = userInputString.count
-            if stringLength == 0 && upperBound == 0 {
+            // checks if the string is allowed to be empty and if it is empty 
+            if allowEmpty == true && stringLength == stringLengthEmpty{
+                // only occures in edit record when customer wants to keep the field the same 
                 return userInputString
             }
-            // checks if upperbound == 0, this is the number I use for no upper bound
-            if upperBound == 0 && stringLength >= lowerBound {
-                // if upperbound is 0 and input is longer than lower bound it returns the value
-                return userInputString
-            }
-            // if upperbound is not 0 it runs the normal check if it is between boundries
+            // if allowempty is not true it runs the normal check if it is between boundries
             else {
+                //compares input length to lower and upperbound
                 if stringLength >= lowerBound && stringLength <= upperBound {
                     return userInputString
                 } else {
@@ -450,36 +445,6 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String) -> String {
 
         } else {
             print("please ensure your input contains only letters and no numbers ")
-        }
-    }
-}
-
-/// stringgrabbernamechange, i had to make this becasue if i added in the -
-///  = 0 statement in previous string grabber it would have broken other inputs
-/// - Parameters:
-///   - lowerBound: the longest a name can be
-///   - upperBound: the longest a name can be
-///   - prompt: what the user is asked to respond to
-/// - Returns: a String only if the string is either empty or within requierments
-func stringGrabberNameChange(lowerBound: Int, upperBound: Int, prompt: String) -> String {
-
-    print(prompt)
-    while true {
-        if let userInputString = readLine() {
-            let stringLength = userInputString.count
-            if stringLength == 0 {
-                return userInputString
-            } else {
-                if stringLength >= lowerBound && stringLength <= upperBound {
-                    return userInputString
-                } else {
-                    print(
-                        """
-                        please ensure your input is longer than \(lowerBound) and shorter than \(upperBound) 
-                        or left blank if you wish to make no change
-                        """)
-                }
-            }
         }
     }
 }
@@ -500,20 +465,21 @@ func addRecord(dbQueue: DatabaseQueue) {
     // to increase how readable it is and declutter the system
     system("clear")
     print(" you have chosen to add a record to a table, your options are:")
-    /// gets user input between 1 and 3
+    // gets user input between 1 and 3
     let tableNumber = inputCheckNumber(
         prompt: availableTables,
         lowerBound: tablesLowerBound, upperBound: tablesUpbound)
-    /// only once a vlid input has been passed out of inputCheckNumber does this do block run
+    // only once a vlid input has been passed out of inputCheckNumber does this do block run
     do {
-        /// runs the switch and nescary case depending on user input
+        // runs the switch and nescary case depending on user input
         try dbQueue.write { db in
             switch tableNumber {
             // only trriggers when user inputs a 1
             case 1:
-                // i get the customer ID outside of the struct so i can check it
-                let customerId = inputCheckNumberNoUpBoundry(
-                    prompt: customerIdPrompt, lowerBound: IDsLowerBound)
+                // asks for customerID using inputchecknumber
+                let customerId = inputCheckNumber(
+                    prompt: customerIdPrompt, lowerBound: IDsLowerBound,
+                    upperBound: noUpperBound)
                 // checks if its nill, if it is it runs an error message and returns to main menu
                 if try Customer.fetchOne(db, key: customerId) == nil {
                     print("please ensure the Id you input exists")
@@ -527,8 +493,9 @@ func addRecord(dbQueue: DatabaseQueue) {
                         // leaves Loan ID blank for the Db to auto incriment
                         loanID: nil,
                         // only passes an ID into bookID when the input is a number greater than 0
-                        bookID: inputCheckNumberNoUpBoundry(
-                            prompt: bookIdPrompt, lowerBound: IDsLowerBound),
+                        bookID: inputCheckNumber(
+                            prompt: bookIdPrompt, lowerBound: IDsLowerBound,
+                            upperBound: noUpperBound),
 
                         // uses dategrabber function to grab the date the book was handed out
                         dateBorrowed: dateGrabber(), dateReturned: nil, status: statusLoan)
@@ -555,20 +522,23 @@ func addRecord(dbQueue: DatabaseQueue) {
                     id: nil,
                     // uses stringgrabber to ask for name, only sets title when answer is within bounds
                     title: stringGrabber(
-                        lowerBound: shortestTitle, upperBound: longestTitle, prompt: bookTitlePrompt
+                        lowerBound: shortestTitle, upperBound: longestTitle,
+                        prompt: bookTitlePrompt, allowEmpty: allowEmptyFalse
                     ),
                     // same as befroe for author
                     author: stringGrabber(
-                        lowerBound: shortestName, upperBound: longestName, prompt: bookAuthorPrompt),
+                        lowerBound: shortestName, upperBound: longestName,
+                        prompt: bookAuthorPrompt, allowEmpty: allowEmptyFalse),
                     // only when the input meets requierments is this value set
                     year: stringGrabber(
                         lowerBound: oldestDateOfPublication, upperBound: newestPublication,
-                        prompt: yearOfPublicationPrompt),
+                        prompt: yearOfPublicationPrompt, allowEmpty: allowEmptyFalse),
                     // in case the user is adding multipule copies to the library
 
-                    amount: inputCheckNumberNoUpBoundry(
+                    amount: inputCheckNumber(
                         prompt:
-                            amountPrompt, lowerBound: bookAmountLowerBound))
+                            amountPrompt, lowerBound: bookAmountLowerBound,
+                        upperBound: noUpperBound))
                 // trys to safely insert all information into the tables
                 try newBook.insert(db)
                 print("record added succesfully")
@@ -580,13 +550,15 @@ func addRecord(dbQueue: DatabaseQueue) {
                     id: nil,
                     // next three lines all grab customer infomration using string grabber
                     firstName: stringGrabber(
-                        lowerBound: shortestName, upperBound: longestName, prompt: firstNamePrompt),
+                        lowerBound: shortestName, upperBound: longestName,
+                        prompt: firstNamePrompt, allowEmpty: allowEmptyFalse),
                     // checks length
                     lastName: stringGrabber(
-                        lowerBound: shortestName, upperBound: longestName, prompt: lastNamePrompt),
+                        lowerBound: shortestName, upperBound: longestName,
+                        prompt: lastNamePrompt, allowEmpty: allowEmptyFalse),
                     phoneNumber: stringGrabber(
                         lowerBound: shortestPhoneNumber,
-                        upperBound: longestPhoneNumber, prompt: phoneNumberPrompt))
+                        upperBound: longestPhoneNumber, prompt: phoneNumberPrompt, allowEmpty: allowEmptyFalse))
                 // trys to add in all customer details, because of functions used userinputs are safe by here
                 try newCustomer.insert(db)
                 print("record added succesfully")
@@ -612,8 +584,8 @@ func addRecord(dbQueue: DatabaseQueue) {
 func processLoanReturn(dbQueue: DatabaseQueue) {
     print("you have chosen to return a book")
     // gets the loan ID but only continues when input is safe
-    let loanToReturnId = inputCheckNumberNoUpBoundry(
-        prompt: loanReturnPrompt, lowerBound: IDsLowerBound)
+    let loanToReturnId = inputCheckNumber(
+        prompt: loanReturnPrompt, lowerBound: IDsLowerBound, upperBound: noUpperBound)
     do {
         // seeing as the only userinput needed is the ID of the order as the rest of the stuff is hard coded in
         try dbQueue.write { db in
@@ -637,7 +609,8 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
                         print("Loan returned successfully")
                     }
                 } else {
-                    print("Loan number \(loan.loanID, default: "N/A") has already been returned")
+                    print(
+                        "Loan number \(loan.loanID, default: "N/A") has already been returned")
                 }
             } else {
                 // if the bookId cant be foundthis is ran
@@ -655,36 +628,36 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
 /// printCustomer table, checks if the user wants to print all customers
 /// - Parameter dbQueue: passes a connection to the database to the function
 func printCustomerTableOptional(dbQueue: DatabaseQueue) {
-    // only able to exit when the user makes a valid choice (yes or no) 
+    // only able to exit when the user makes a valid choice (yes or no)
     var printTableControl = false
     // anytime the function is called it goes straight into this loop because its set to false above
     while printTableControl == false {
         // declutters the terminal
         system("clear")
         print("before you edit a customers record would you like to view all customer records?")
-        // gets user input and uses if let readline to check it 
+        // gets user input and uses if let readline to check it
         if let userPrintTable = readLine() {
             // lowercases it to ensure any vairiation of yes or no is accepteed
             if userPrintTable.lowercased() == "yes" {
                 do {
-                    /// trys to read all the customer table any errors are thrown to the print statment
+                    // trys to read all the customer table any errors are thrown to the print statment
                     try dbQueue.read { db in
-                        /// fetches all customer records
+                        // fetches all customer records
                         let results = try Customer.fetchAll(db)
-                        /// cycles through the results suing the description message
+                        // cycles through the results suing the description message
                         for result in results {
                             print(result.description)
                         }
-                    // breaks the loop exitiing the function 
-                    printTableControl = true
+                        // breaks the loop exitiing the function
+                        printTableControl = true
                     }
-                // any errors thrown by trys or dos are caught here
+                    // any errors thrown by trys or dos are caught here
                 } catch { print(error) }
-            // if its not yes the next test is no, if it is no it breaks the loop and exits the function 
+                // if its not yes the next test is no, if it is no it breaks the loop and exits the function
             } else if userPrintTable.lowercased() == "no" {
                 printTableControl = true
             } else {
-                // so the user has to input yes or no it is impossible to get out of the function with out it 
+                // so the user has to input yes or no it is impossible to get out of the function with out it
                 print("please input yes or no ")
             }
 
@@ -697,8 +670,8 @@ func printCustomerTableOptional(dbQueue: DatabaseQueue) {
 /// - Parameter dbQueue:
 func editCustomer(dbQueue: DatabaseQueue) {
     // first thing the function does is find the custoemr attempting to be eddited
-    let customerChange = inputCheckNumberNoUpBoundry(
-        prompt: customerChangePrompt, lowerBound: IDsLowerBound)
+    let customerChange = inputCheckNumber(
+        prompt: customerChangePrompt, lowerBound: IDsLowerBound, upperBound: noUpperBound)
     // once a valid id has been enterd (although unchecked if it exists)
     do {
         try dbQueue.write { db in
@@ -713,9 +686,9 @@ func editCustomer(dbQueue: DatabaseQueue) {
                 let customerPhoneNumber = customer.phoneNumber
 
                 // grabs the new first name
-                customer.firstName = stringGrabberNameChange(
+                customer.firstName = stringGrabber(
                     lowerBound: shortestName,
-                    upperBound: longestName, prompt: customerFirstNameChangePrompt)
+                    upperBound: longestName, prompt: customerFirstNameChangePrompt, allowEmpty: allowEmptyTrue)
 
                 // checks if user left the name blank
                 if customer.firstName == "" {
@@ -724,9 +697,9 @@ func editCustomer(dbQueue: DatabaseQueue) {
                 }
 
                 // as above checks grabs the customer last name and checks if blank
-                customer.lastName = stringGrabberNameChange(
+                customer.lastName = stringGrabber(
                     lowerBound: shortestName,
-                    upperBound: longestName, prompt: customerLastNameChangePrompt)
+                    upperBound: longestName, prompt: customerLastNameChangePrompt, allowEmpty: allowEmptyFalse)
 
                 // if blank the customer last name is restored
                 if customer.lastName == "" {
@@ -734,9 +707,10 @@ func editCustomer(dbQueue: DatabaseQueue) {
                 }
 
                 // uses string grabber to get the new phone number
-                customer.phoneNumber = stringGrabberNameChange(
+                customer.phoneNumber = stringGrabber(
                     lowerBound: shortestPhoneNumber,
-                    upperBound: longestPhoneNumber, prompt: customerPhoneNumberChangePrompt)
+                    upperBound: longestPhoneNumber, prompt: customerPhoneNumberChangePrompt, 
+                    allowEmpty: allowEmptyFalse)
                 //resets customer phone number if left blank
                 if customer.phoneNumber == "" {
                     customer.phoneNumber = customerPhoneNumber
@@ -755,46 +729,47 @@ func editCustomer(dbQueue: DatabaseQueue) {
 func deleteRecord(dbQueue: DatabaseQueue) {
     system("clear")
     print(deleteWelcomePrompt)
-    /// gets the desierd table number from the user
+    // gets the desierd table number from the user
     let tableNumber = inputCheckNumber(
         prompt: availableTables, lowerBound: tablesLowerBound, upperBound: tablesUpbound)
-    /// prints out the table the user has decided to alter
+    // prints out the table the user has decided to alter
     print("you have chosen to delete a record from the \(tables[tableNumber - 1]) table")
-    /// gets the ID the user wants to delete this is checked and used later in the case statements
-    let id = inputCheckNumberNoUpBoundry(prompt: deletePrompt, lowerBound: IDsLowerBound)
+    // gets the ID the user wants to delete this is checked and used later in the case statements
+    let id = inputCheckNumber(
+        prompt: deletePrompt, lowerBound: IDsLowerBound, upperBound: noUpperBound)
     do {
-        ///performs database operations
+        //performs database operations
         try dbQueue.write { db in
             switch tableNumber {
-            /// if the user responded to the prompt above with one they chose to lter theloan table
+            // if the user responded to the prompt above with one they chose to lter theloan table
             case 1:
                 if let record = try Loan.fetchOne(db, key: id) {
-                    /// if the record exists it will try to delte the record from the database
+                    // if the record exists it will try to delte the record from the database
                     try record.delete(db)
                     print("file deleted succesfully!")
-                    /// if no record is found the else block is ran and the function is exited
+                    // if no record is found the else block is ran and the function is exited
                 } else {
-                    /// lets the user know no ID could be found
+                    // lets the user know no ID could be found
                     print("no record with ID : \(id) found, no changes have been made")
                 }
-            /// if the user input 2 then they wanted to alter the books table and checks if the ID they selected exists
+            // if the user input 2 then they wanted to alter the books table and checks if the ID they selected exists
             case 2:
                 if let record = try Books.fetchOne(db, key: id) {
-                    /// if the id exists it will attempt to delete the record
+                    // if the id exists it will attempt to delete the record
                     try record.delete(db)
                     print("file deleted succesfully!")
-                    /// if the ID does not exist this else block is triggerd, prints no id coudl be found
+                    // if the ID does not exist this else block is triggerd, prints no id coudl be found
                 } else {
                     print("no record with ID : \(id) found, no changes have been made")
                 }
 
-            /// if the user input 3 they want to edit the customer table, checks if the selcted ID exists
+            // if the user input 3 they want to edit the customer table, checks if the selcted ID exists
             case 3:
                 if let record = try Customer.fetchOne(db, key: id) {
-                    /// if the ID exists the code will try to delte it from database, any  errors thrown are handeled by catch below
+                    // if the ID exists the code will try to delte it from database, any  errors thrown are handeled by catch below
                     try record.delete(db)
                     print("file deleted succesfully!")
-                    /// if Id does not exist this else block is ran and the function is exited
+                    // if Id does not exist this else block is ran and the function is exited
                 } else {
                     print("no record with ID : \(id) found, no changes have been made")
                 }
@@ -802,7 +777,7 @@ func deleteRecord(dbQueue: DatabaseQueue) {
             default: print("error! not an option")
             }
         }
-        /// if any error is thrown by the delte function this is ran
+        // if any error is thrown by the delte function this is ran
     } catch { print("you ran into an error: \(error)") }
 }
 
@@ -812,7 +787,7 @@ struct SwiftPlayground {
     static func main() {
         var systemRunning = true
         let dbPath = "Sources/SwiftPlayground/library.db"
-        /// trying to connect to database, sends an error f its unable
+        // trying to connect to database, sends an error f its unable
         guard let dbQueue = try? DatabaseQueue(path: dbPath) else {
             print("Could not open database.")
             return
@@ -824,10 +799,11 @@ struct SwiftPlayground {
             // needs to be made false every time the code is ran through, put here so when the user quits it can be-
             //set to true and skip the last message
             var userContinueBool: Bool = false
-            /// main menu function, this function prints the main menu and checks the user input is valid
+            // main menu function, this function prints the main menu and checks the user input is valid
             let mainMenuOption = inputCheckNumber(
-                prompt: mainMessage, lowerBound: mainMenuLowerBound, upperBound: mainMenuUpperBound)
-            /// based on the different cases the user inputs it runs a different case corresponding to the desierd task
+                prompt: mainMessage, lowerBound: mainMenuLowerBound,
+                upperBound: mainMenuUpperBound)
+            // based on the different cases the user inputs it runs a different case corresponding to the desierd task
             switch mainMenuOption {
             case 1:
                 // finds a single record based off of primary key
@@ -861,7 +837,7 @@ struct SwiftPlayground {
             }
             // set to false at the top of the function, set to true in case 7, the exit statement
             while userContinueBool == false {
-                print("press enter to continue")
+                print(continuePrompt)
                 // doesnt need to check if its anything or meets anyboundries to didnt use stringgrabber
                 let userContinue = readLine()
                 if userContinue == "" {
