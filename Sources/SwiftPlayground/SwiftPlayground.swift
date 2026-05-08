@@ -3,12 +3,35 @@
 
 import Foundation
 import GRDB
-
+//when ever i want to print out the abvailable tables i use this, any new tables added must be put here to 
 let tables = ["Loan", "Books", "Customer"]
+
+// used in the switch ccase that runs in the main code, applies to findSingle function 
+let findSingleIndex = 1
+
+// used in the switch case running in main func, applies to orintTable
+let printTableIndex = 2
+
+//if user inputs 3 this constant is used in the switch statment to compare input to statment
+let deleteFileIndex = 3
+
+// if the user inputs 4 at the main menu this is used tocompare input to case statemnts 
+let addFileIndex = 4
+
+//if userinputs 5 this is case is ran
+let proccessReturnIndex = 5
+
+//used to check if the user input is 6 in the switch case in main func
+let editRecordIndex = 6
+
+//used in switch case in main func when user inputs 7 this is used in the case statemnt
+let quitIndex = 7
 // used to compare user input to limiatations in main menu
 let mainMenuLowerBound = 1
+
 // used to compare the user input in the main menu to the upper bound
 let mainMenuUpperBound = 7
+
 // main menu message that is printed anytime the user naviates to the main menu
 let mainMessage =
     ("""
@@ -23,13 +46,16 @@ let mainMessage =
 
     """)
 
+//used when ever i need to check if a string is empty
+let stringLengthEmpty = ""
+
 // used when everstringgarabber is used in a place where it cant return empty
 let allowEmptyFalse = false
 
 // used anytime when the userinput can be empty
 let allowEmptyTrue = true
-// used to compare user input to 0 used in used in stringGrabber
-let stringLengthEmpty = 0
+// used to compare user input to 0 used when ever i check if anything is equal to zero
+let checkEmpty = 0
 
 // i changed my inputchekcnuber to handle no upper bound so i can remove inputchecknumber no up boundry
 let noUpperBound: Int? = nil
@@ -61,8 +87,20 @@ let statusLoan = "Loaned"
 // this is what gets useed in processReturn func
 let statusReturn = "Returned"
 
+//used when ever changing an index or amount by 1
+let indexByOne = 1
+
 // user is prompted this when they have finished a task.
 let continuePrompt = ("press enter when you want to continue")
+
+//used when ever comparing a user input to a table number in any case statement
+let loanTableNumber = 1 
+
+//used when ever comapring a user input in a switch statemnt 
+let bookTableNumber = 2
+
+//used when ever checking a userinput in a case statement 
+let customertableNumber = 3
 
 // used to check the amount used when asking how many books is beign added is valid(no less than 0)
 let bookAmountLowerBound = 1
@@ -317,14 +355,14 @@ func printTable(dbQueue: DatabaseQueue) {
         try dbQueue.read { db in
             switch tableNumber {
             /// if the user slectes case1 it prints the loan table
-            case 1:
+            case loanTableNumber:
                 let results = try Loan.fetchAll(db)
                 /// cycles through the results suing the description message
                 for result in results {
                     print(result.description)
                 }
             /// if the user selets 2 is prints the books table
-            case 2:
+            case bookTableNumber:
                 var unAvailability: [String] = []
                 var available: [String] = []
                 let results = try Books.fetchAll(db)
@@ -348,7 +386,7 @@ func printTable(dbQueue: DatabaseQueue) {
                     print("OUT OF STOCK || \(unAvailable.description) ")
                 }
             /// if the user selctes table 3 loans is printed
-            case 3:
+            case customertableNumber:
                 ///trys to fetch all recors, stores them in results
                 let results = try Customer.fetchAll(db)
                 /// cycles through the results suing the description message
@@ -372,18 +410,21 @@ func findSingle(dbQueue: DatabaseQueue) {
     system("clear")
     print("you have chosen to search for a singular record, available tables: ")
     // using the function before I get the number associated with the table the user is after
-    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: 1, upperBound: 3)
+    let tableNumber = inputCheckNumber(prompt: availableTables, lowerBound: tablesLowerBound, upperBound: tablesUpbound)
     // prints out the selected table
     let userSingleQuery = inputCheckNumber(
         prompt:
-            " you have chosen to find a record in the  \(tables[tableNumber-1]) table, what ID are you looking for",
+            """
+            you have chosen to find a record in the  \(tables[tableNumber-indexByOne]) table,
+            what ID are you looking for?
+            """,
         lowerBound: IDsLowerBound, upperBound: noUpperBound)
     do {
         //once a input that is checked to be a int is retrived the input is used to find the loan
         try dbQueue.read { db in
             switch tableNumber {
             // uses table number from above to determine which table is being searched
-            case 1:
+            case loanTableNumber:
                 // safely retrives a loan using if let, becasue it could be nil i have a message that prints if it is
                 if let result = try Loan.fetchOne(db, key: userSingleQuery) {
                     if let name = try Customer.fetchOne(db, key: result.customerID) {
@@ -392,13 +433,13 @@ func findSingle(dbQueue: DatabaseQueue) {
                 } else {
                     print("no record with ID: \(userSingleQuery) could be found")
                 }
-            case 2:
+            case bookTableNumber:
                 if let result = try Books.fetchOne(db, key: userSingleQuery) {
                     print(result.description)
                 } else {
                     print("no record with ID: \(userSingleQuery) could be found")
                 }
-            case 3:
+            case customertableNumber:
                 if let result = try Customer.fetchOne(db, key: userSingleQuery) {
                     print(result.description)
                 } else {
@@ -426,7 +467,7 @@ func stringGrabber(lowerBound: Int, upperBound: Int, prompt: String, allowEmpty:
             //gets the length of the input
             let stringLength = userInputString.count
             // checks if the string is allowed to be empty and if it is empty
-            if allowEmpty == true && stringLength == stringLengthEmpty {
+            if allowEmpty == true && stringLength == checkEmpty{
                 // only occures in edit record when customer wants to keep the field the same
                 return userInputString
             }
@@ -474,7 +515,7 @@ func addRecord(dbQueue: DatabaseQueue) {
         try dbQueue.write { db in
             switch tableNumber {
             // only trriggers when user inputs a 1
-            case 1:
+            case loanTableNumber:
                 // asks for customerID using inputchecknumber
                 let customerId = inputCheckNumber(
                     prompt: customerIdPrompt, lowerBound: IDsLowerBound,
@@ -501,10 +542,10 @@ func addRecord(dbQueue: DatabaseQueue) {
                     //update the amount of books using bookID linked to loan
                     if var book = try Books.fetchOne(db, key: newLoan.bookID) {
                         // checks how much stock thebook has before adding 
-                        if book.amount != 0 {
+                        if book.amount != checkEmpty{
 
                             // updates the amount of books available to one less
-                            book.amount -= 1
+                            book.amount -= indexByOne
                             // will try to insert the new loan
                             try newLoan.insert(db)
                             // only if the newloan was succesfully inserted the book amount gets updated
@@ -520,7 +561,7 @@ func addRecord(dbQueue: DatabaseQueue) {
                     }
                 }
 
-            case 2:
+            case bookTableNumber:
                 // defines the new book structure
                 let newBook = Books(
                     // passes a nil value to the DB so the DB can auto incriment it
@@ -549,7 +590,7 @@ func addRecord(dbQueue: DatabaseQueue) {
                 print("record added succesfully")
 
             // only triggers when user inputs a 3
-            case 3:
+            case customertableNumber:
                 let newCustomer = Customer(
                     // leave ID nil and let DB auto incriment a new ID
                     id: nil,
@@ -599,15 +640,18 @@ func processLoanReturn(dbQueue: DatabaseQueue) {
             if var loan = try Loan.fetchOne(db, key: loanToReturnId) {
                 // checks if hte loan has already been proccesed
                 if loan.status != statusReturn {
-                    // updates the columns of the loan to the returned status
+
+                    // updates the columns of the loan to the returned status loan
                     loan.status = statusReturn
+
                     // updates the dateReturned column to the current date
                     loan.dateReturned = dateGrabber()
 
                     //finds the book id using the reference found in the loan
                     if var book = try Books.fetchOne(db, key: loan.bookID) {
+
                         // once the book ID is found the amount gets increased and then updated
-                        book.amount += 1
+                        book.amount += indexByOne
                         // once both columns have beenupdated and the book has been found they get inserted
                         try loan.update(db)
                         // only once the loan is updated is teh book amount increased
@@ -698,7 +742,7 @@ func editCustomer(dbQueue: DatabaseQueue) {
                     allowEmpty: allowEmptyTrue)
 
                 // checks if user left the name blank
-                if customer.firstName == "" {
+                if customer.firstName == stringLengthEmpty{
                     // if left blank the user first name is reset
                     customer.firstName = customerFirstName
                 }
@@ -710,7 +754,7 @@ func editCustomer(dbQueue: DatabaseQueue) {
                     allowEmpty: allowEmptyTrue)
 
                 // if blank the customer last name is restored
-                if customer.lastName == "" {
+                if customer.lastName == stringLengthEmpty {
                     customer.lastName = customerLastName
                 }
 
@@ -720,14 +764,14 @@ func editCustomer(dbQueue: DatabaseQueue) {
                     upperBound: longestPhoneNumber, prompt: customerPhoneNumberChangePrompt,
                     allowEmpty: allowEmptyTrue)
                 //resets customer phone number if left blank
-                if customer.phoneNumber == "" {
+                if customer.phoneNumber == stringLengthEmpty {
                     customer.phoneNumber = customerPhoneNumber
                 }
 
                 // once all records have been retrived and set to the proper value it is updated
                 try customer.update(db)
 
-            }
+            }else{print("this customer doesnt exist!")}
         }
     } catch { print("you ran into an error :\(error)") }
 }
@@ -741,7 +785,7 @@ func deleteRecord(dbQueue: DatabaseQueue) {
     let tableNumber = inputCheckNumber(
         prompt: availableTables, lowerBound: tablesLowerBound, upperBound: tablesUpbound)
     // prints out the table the user has decided to alter
-    print("you have chosen to delete a record from the \(tables[tableNumber - 1]) table")
+    print("you have chosen to delete a record from the \(tables[tableNumber - indexByOne]) table")
     // gets the ID the user wants to delete this is checked and used later in the case statements
     let id = inputCheckNumber(
         prompt: deletePrompt, lowerBound: IDsLowerBound, upperBound: noUpperBound)
@@ -751,7 +795,7 @@ func deleteRecord(dbQueue: DatabaseQueue) {
         try dbQueue.write { db in
             switch tableNumber {
             // if the user responded to the prompt above with one they chose to lter theloan table
-            case 1:
+            case loanTableNumber:
                 if let record = try Loan.fetchOne(db, key: id) {
                     // checks if the found loan has been returned
                     if record.status == statusReturn {
@@ -767,7 +811,7 @@ func deleteRecord(dbQueue: DatabaseQueue) {
                     print("no record with ID : \(id) found, no changes have been made")
                 }
             // if the user input 2 then they wanted to alter the books table and checks if the ID they selected exists
-            case 2:
+            case bookTableNumber:
                 if let recordDelte = try Books.fetchOne(db, key: id) {
 
                     // filters the loan table for all loans of this book
@@ -796,7 +840,7 @@ func deleteRecord(dbQueue: DatabaseQueue) {
                 }
 
             // if the user input 3 they want to edit the customer table, checks if the selcted ID exists
-            case 3:
+            case customertableNumber:
                 if let record = try Customer.fetchOne(db, key: id) {
                     // finds all loans this customer has and adds to a list
                     let recordCheck = try Loan.filter(Loan.Columns.customerID == id).fetchAll(db)
@@ -855,28 +899,28 @@ struct SwiftPlayground {
                 upperBound: mainMenuUpperBound)
             // based on the different cases the user inputs it runs a different case corresponding to the desierd task
             switch mainMenuOption {
-            case 1:
+            case findSingleIndex:
                 // finds a single record based off of primary key
                 findSingle(dbQueue: dbQueue)
-            case 2:
+            case printTableIndex:
                 // prints an entire table
                 printTable(dbQueue: dbQueue)
-            case 3:
+            case deleteFileIndex:
                 // runs the delete function
                 deleteRecord(dbQueue: dbQueue)
-            case 4:
+            case addFileIndex:
                 // runs the add record function
                 addRecord(dbQueue: dbQueue)
-            case 5:
+            case proccessReturnIndex:
                 //proccess a return
                 processLoanReturn(dbQueue: dbQueue)
-            case 6:
+            case editRecordIndex:
                 // while testing i found it slow to have to remember all the customer ids so i added this to print all
                 printCustomerTableOptional(dbQueue: dbQueue)
                 // edits a customer once i ask if they want to view all customer records
                 editCustomer(dbQueue: dbQueue)
             // exit statement, skips the continue function at the bottom and exits the while loop over the function
-            case 7:
+            case quitIndex:
                 print("Goodbye!")
                 systemRunning = false
                 userContinueBool = true
