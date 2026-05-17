@@ -116,7 +116,7 @@ let outOfStock = 0
 let shortestTitle = 2
 
 // longest possible title length used in addfile function in case 2
-let longestTitle = 255
+let longestTitle = 80
 
 // used in the deleteRecord func to make it clear to the user what they chose to do
 let deleteWelcomePrompt = ("you have chosen to delete a record, below are the options you have")
