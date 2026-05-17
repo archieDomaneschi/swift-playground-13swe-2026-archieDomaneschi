@@ -192,8 +192,12 @@ struct Books: Identifiable, PersistableRecord, Codable, FetchableRecord, TableRe
     var description: String {
         // see testing table for source of default and the solution i used
         """
-        book ID: \(id, default: "N/A") |Title: \(title) |Author: \(author) |Date of Publication: \(year)
-        |AmountLeft \(amount)
+        Book ID: \(id, default: "N/A") 
+            |Title: \(title) 
+            |Author: \(author)
+            |Date of Publication: \(year)
+            |AmountLeft \(amount)
+        ____________________________________
         """
     }
     /// to conform is Codable
@@ -232,7 +236,12 @@ struct Customer: Identifiable, PersistableRecord, Codable, FetchableRecord, Tabl
     /// description of customer
     var description: String {
         // *note* used VS code and a google to over come optional issues: "https://surl.lt/mdhdpd"
-        "ID: \(id, default: "N/A" ) |Name: \(firstName) \(lastName) |Phone Number: \(phoneNumber)"
+        """
+        |ID: \(id, default: "N/A" ) 
+            |Name: \(firstName) \(lastName) 
+            |Phone Number: \(phoneNumber)
+        ___________________________________
+        """
     }
     /// to conform is Codable
     enum CodingKeys: String, CodingKey {
@@ -272,7 +281,14 @@ struct Loan: Codable, FetchableRecord, TableRecord, CustomStringConvertible, Per
 
     /// description of customer
     var description: String {
-        "CustomerID: \(customerID) |BookID: \(bookID) |Date Borrowed: \(dateBorrowed)|Status: \(status)"
+        """
+        |LoanID: \(loanID, default: "N/A" )
+            |CustomerID: \(customerID) 
+            |BookID: \(bookID) 
+            |Date Borrowed: \(dateBorrowed)
+            |Status: \(status)
+
+        """
     }
     /// to conform to Codable
     enum CodingKeys: String, CodingKey {
@@ -360,6 +376,7 @@ func printTable(dbQueue: DatabaseQueue) {
                 /// cycles through the results suing the description message
                 for result in results {
                     print(result.description)
+                    print("_______________________________________")
                 }
             /// if the user selets 2 is prints the books table
             case bookTableNumber:
@@ -374,16 +391,18 @@ func printTable(dbQueue: DatabaseQueue) {
                         available.append(result.description)
                     }
                 }
+                print("IN STOCK|")
                 for available in available {
-                    print("IN STOCK || \(available.description)")
+                    print("\(available.description)")
                 }
                 // splits up results so they are more clear
                 print(
                     """
                     =======================================================================================================
                     """)
+                print("OUT OF STOCK |")
                 for unAvailable in unAvailability {
-                    print("OUT OF STOCK || \(unAvailable.description) ")
+                    print("\(unAvailable.description) ")
                 }
             /// if the user selctes table 3 loans is printed
             case customertableNumber:
@@ -428,11 +447,12 @@ func findSingle(dbQueue: DatabaseQueue) {
                 // safely retrives a loan using if let, becasue it could be nil i have a message that prints if it is
                 if let result = try Loan.fetchOne(db, key: userSingleQuery) {
                     if let name = try Customer.fetchOne(db, key: result.customerID) {
-                        print("\(result.description) |Loaned By: \(name.firstName)")
+                        print("\(result.description)    |Loaned By: \(name.firstName)")
                     }
                 } else {
                     print("no record with ID: \(userSingleQuery) could be found")
                 }
+
             case bookTableNumber:
                 if let result = try Books.fetchOne(db, key: userSingleQuery) {
                     print(result.description)
