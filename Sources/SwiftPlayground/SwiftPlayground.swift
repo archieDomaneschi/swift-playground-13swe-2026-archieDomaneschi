@@ -395,11 +395,6 @@ func printTable(dbQueue: DatabaseQueue) {
                 for available in available {
                     print("\(available.description)")
                 }
-                // splits up results so they are more clear
-                print(
-                    """
-                    =======================================================================================================
-                    """)
                 print("OUT OF STOCK |")
                 for unAvailable in unAvailability {
                     print("\(unAvailable.description) ")
